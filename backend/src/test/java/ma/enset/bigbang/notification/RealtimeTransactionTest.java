@@ -62,7 +62,7 @@ class RealtimeTransactionTest {
             tx.executeWithoutResult(status -> { events.drawReset(new RealtimePayload.DrawReset(1, 2)); status.setRollbackOnly(); });
             verifyNoInteractions(messaging);
             tx.executeWithoutResult(status -> { events.drawReset(new RealtimePayload.DrawReset(1, 2)); verifyNoInteractions(messaging); });
-            verify(messaging).convertAndSend(eq("/topic/draw"), argThat(value ->
+            verify(messaging).convertAndSend(eq("/topic/draw"), argThat((Object value) ->
                     value instanceof EventEnvelope<?> envelope && envelope.type() == EventType.DRAW_RESET));
         }
     }
