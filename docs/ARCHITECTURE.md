@@ -36,3 +36,7 @@ Mohammed's Quiz will reuse the modular monolith, participants, session principal
 ### A02 administrator frontend
 
 The ADMIN-protected `/admin` dashboard uses `AdminLayout` for reusable navigation and the existing API, CSRF and shared STOMP clients. Participant counts, current-cycle draw counts and eligible stock are retrieved independently from the backend. Relevant `/topic/admin` and `/topic/draw` events trigger REST resynchronization; the draw start mutation is never retried automatically. A disconnected broker pauses the draw control until reconnection. A03–A06 interfaces remain unimplemented.
+
+### A03 Lucky Draw management
+
+The role-protected `/admin/draw` page reuses `AdminLayout` and the official A02 header. It calls the existing draw status, start, cancel, reset and paginated history endpoints, plus participant count; confirmations precede cancel/reset, and the reset includes the last authoritative expected cycle number. STOMP events and reconnects trigger REST refresh; failed or uncertain mutations are not automatically repeated. A04 remains unimplemented.

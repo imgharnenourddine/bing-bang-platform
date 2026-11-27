@@ -1,4 +1,5 @@
 import { api } from '../../services/api';
+export interface DrawHistoryEntry { id:string; cycleNumber:number; status:'ACTIVE'|'COMPLETED'|'CANCELLED'; createdAt:string; participant:{participantNumber:number;firstName:string;lastName:string} }
 export interface DrawState { cycleNumber: number; registeredCount: number; selectedCount: number; eligibleCount: number; canStartDraw: boolean; canReset: boolean; activeDraw: null | { id: string; status: 'ACTIVE' | 'COMPLETED' | 'CANCELLED'; participant: { participantNumber: number; firstName: string; lastName: string } } }
 export interface Prize { enabled: boolean; remainingStock: number }
 export function availableStock(prizes: Prize[]): number { return prizes.filter(prize => prize.enabled && prize.remainingStock > 0).reduce((total, prize) => total + prize.remainingStock, 0); }
@@ -13,3 +14,8 @@ export function drawDescription(draw: DrawState): string {
   return 'No draw is currently running.';
 }
 export function relevantEvent(type: string): boolean { return ['PARTICIPANT_REGISTERED','DRAW_STARTED','DRAW_PARTICIPANT_SELECTED','DRAW_COMPLETED','DRAW_CANCELLED','DRAW_RESET','DRAW_STATE_UPDATED','PRIZE_INVENTORY_UPDATED','PRIZE_AWARDED'].includes(type); }
+
+export interface DrawHistory { content:DrawHistoryEntry[]; page:number; size:number; totalElements:number }
+export async function fetchDrawHistory(page:number, size:number): Promise<DrawHistory> { return (await api.get<DrawHistory>('/admin/draw/history',{params:{page,size}})).data; }
+export async function cancelDraw(id:string): Promise<void> { await api.post(`/admin/draw/${encodeURIComponent(id)}/cancel`); }
+export async function resetDraw(cycleNumber:number): Promise<void> { await api.post('/admin/draw/reset',{confirmed:true,expectedCycleNumber:cycleNumber}); }
