@@ -21,12 +21,12 @@ export async function fetchIdentity(): Promise<Identity | null> {
   }
 }
 
-export async function registerParticipant(firstName: string, lastName: string): Promise<ParticipantIdentity> {
+export async function registerParticipant(firstName: string, lastName: string): Promise<{ identity: ParticipantIdentity; created: boolean }> {
   const response = await api.post<ParticipantIdentity>('/participants/register', { firstName, lastName });
   if (response.data.role !== 'PARTICIPANT' || !response.data.id || !Number.isInteger(response.data.participantNumber)) {
     throw new Error('Unexpected registration response');
   }
-  return response.data;
+  return { identity: response.data, created: response.status === 201 };
 }
 
 /** Prevents concurrent POSTs even before React has rendered the disabled state. */
