@@ -26,4 +26,6 @@ F07 status: backend Maven, PostgreSQL/Flyway, authenticated HTTP and real WebSoc
 
 P01 participant registration is implemented at `/`, with the P02 home at `/participant`. Reuse `frontend/src/features/participant` and its shared authentication context and API service; preserve participant and administrator session boundaries. The official poster crops are in `frontend/src/assets/participant`. P03, P04, and Quiz screens remain future work. Browser and live backend integration still require verification in a running environment.
 
-A01 administrator login lives at `/admin/login`; `/admin` is a role-protected holding page, not the A02 dashboard. Reuse the existing session context and shared CSRF-aware API client. Participant sessions require explicit logout before administrator login. Live backend and browser verification remains outstanding; see README. Do not commit the unrelated reconciliation report with A01.
+A01 administrator login lives at `/admin/login`; `/admin` is the role-protected A02 dashboard. Reuse the existing session context and shared CSRF-aware API client. Participant sessions require explicit logout before administrator login. Live backend and browser verification remains outstanding; see README. Do not commit the unrelated reconciliation report with A01.
+
+A02 uses the reusable administrator layout and shared API/STOMP services. Its dashboard shows authoritative REST counts and draw state; management interfaces beyond the dashboard remain future work. See README for live-validation limits.
