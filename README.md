@@ -169,7 +169,7 @@ The frontend must follow the existing official BING BANG event identity. Logos, 
 | Developer | Role | Responsibilities |
 | --- | --- | --- |
 | Noureddine Imgharn | Tech Lead — Core Platform | Architecture, security, registration, participant management, random draw, spinning wheel, shared real-time infrastructure and deployment |
-| Mohammed | Co-Tech Lead — Quiz Module | Quiz data model, API, question management, synchronization, answer submission, scoring, leaderboard and quiz interfaces |
+| Tech Lead | Quiz Module | Quiz data model, API, question management, synchronization, answer submission, scoring, leaderboard and quiz interfaces |
 
 Both developers contribute to integration, testing and release preparation.
 
@@ -306,7 +306,7 @@ Admins configure STANDARD/PREMIUM prizes, weights, stock and progression, then s
 
 ## Quiz developer onboarding
 
-Mohammed's Quiz backend and frontend boundaries are reserved; Quiz logic and screens are not yet implemented. Follow [Quiz integration and developer setup](docs/QUIZ_INTEGRATION.md) for both Compose workflows, Git steps, shared identity and STOMP services, proposed routes, migration reservations and test expectations. V7–V19 are reserved for Quiz; coordinate deployment order. The optional `compose.local.yaml` exposes PostgreSQL on localhost only for running Spring Boot outside Docker.
+The Tech Lead owns Quiz. F06.1 adds the domain and V7 schema; Quiz lifecycle services, APIs and screens are not yet implemented. Follow [Quiz integration and developer setup](docs/QUIZ_INTEGRATION.md) for both Compose workflows, Git steps, shared identity and STOMP services, proposed routes, migration reservations and test expectations. V7–V19 are reserved for Quiz; coordinate deployment order. The optional `compose.local.yaml` exposes PostgreSQL on localhost only for running Spring Boot outside Docker.
 
 ### Participant registration (P01)
 
@@ -357,3 +357,7 @@ For local verification, run the database and backend, then `cd frontend && npm r
 `/admin/participants` is a read-only ADMIN interface using the shared administrator layout and session. It retrieves the list with sequential bounded `/api/admin/participants` pages and the total from `/api/admin/participants/count`. Names and public numbers are searchable across all retrieved pages, and results are displayed 20 at a time. Registration events on `/topic/admin` and reconnection trigger REST resynchronization; search and the nearest valid page are preserved. The current response does not contain registration timestamps, so no date column is shown.
 
 For local verification, start the backend and database, run `cd frontend && npm run dev`, and open `http://localhost:5173/admin/participants` with an administrator session. Live browser and backend validation remain necessary. Page reads are separate requests, so changes during a multi-page refresh are not a single database snapshot; registration events and reconnects initiate another refresh.
+
+### Quiz foundation (F06.1)
+
+`V7__quiz_foundation.sql` and JPA entities provide Quiz session, ordered questions and options, and participant answers. Database constraints prevent duplicate answers and invalid option/question references; future transactional services must enforce publication validity, deadlines, lifecycle and scoring. See [Quiz domain model](docs/QUIZ_DOMAIN_MODEL.md). PostgreSQL migration and JPA integration remain unverified in the restricted environment.
