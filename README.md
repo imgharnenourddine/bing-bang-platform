@@ -8,6 +8,8 @@
 
 The interactive event platform for **BING BANG**, a collaborative kick-off event organized by **GDG, AWS Club and N7Geeks** at **ENSET Mohammedia**.
 
+> **F00 status:** Only the foundation and placeholder home page are implemented. All business features below are planned. JWT is proposed pending approval; the session-based security design below is historical and has not been implemented.
+
 ## Overview
 
 BING BANG Platform centralizes participant registration, digital identification, randomized giveaways, weighted prize distribution and synchronized quizzes within a single real-time web application.
@@ -73,7 +75,7 @@ WebSocket/STOMP broadcasts committed state changes. REST endpoints provide autho
 | --- | --- |
 | Backend | Java 21, Spring Boot, Maven |
 | Persistence | Spring Data JPA, Hibernate, PostgreSQL |
-| Security | Spring Security, HTTP sessions, CSRF protection |
+| Security | Spring Security; JWT proposed, pending approval |
 | Real-time | Spring WebSocket, STOMP |
 | Database migrations | Flyway |
 | Frontend | React, TypeScript, Vite |
@@ -107,7 +109,7 @@ flowchart TD
 ```text
 bing-bang-platform/
 ├── backend/
-│   └── src/main/java/com/kickoff/
+│   └── src/main/java/ma/enset/bigbang/
 │       ├── auth/
 │       ├── config/
 │       ├── common/
@@ -187,15 +189,26 @@ fix(wheel): prevent duplicate prize allocation
 
 ## Getting Started
 
-Planned prerequisites: Java 21, Maven or Maven Wrapper, Node.js, npm, PostgreSQL and Docker Compose (or an equivalent cloud development environment).
+**Foundation setup is incomplete:** `frontend/package-lock.json` could not be generated in the restricted environment. Run `npm install` in `frontend/` with registry access and review the resulting lockfile before using `npm ci`, building the frontend image, or running CI.
 
-After the initial scaffold and Docker configuration are committed, the intended startup command is:
+Prerequisites: Docker with Compose, or Java 21, Maven Wrapper, Node 22.14.0 and PostgreSQL for local development. Copy `.env.example` to `.env` and replace the local database password. The Compose database is not exposed on the host; the frontend and backend bind to localhost.
 
 ```bash
-docker compose up --build
+cp .env.example .env
+# Edit .env and replace the password before starting.
+docker compose up --build -d
+docker compose ps
+docker compose down
 ```
 
-Environment variables, service URLs and exact startup instructions will be documented once the environment is initialized. No local checkout is required if using a compatible cloud IDE.
+Home: http://localhost:8088/; backend health: http://localhost:8080/actuator/health; readiness: http://localhost:8080/actuator/health/readiness. Ports can be changed in `.env`. `docker compose down` preserves the database volume.
+
+```bash
+cd backend && ./mvnw verify
+cd ../frontend && npm ci && npm run lint && npm run typecheck && npm run build
+```
+
+For backend development outside Compose, run PostgreSQL and the Flyway migrations first, set `DB_URL`, `DB_USERNAME`, and `DB_PASSWORD`, then run `./mvnw spring-boot:run`. Vite's `npm run dev` proxies `/api` and `/ws` to localhost:8080. See [architecture](docs/ARCHITECTURE.md), [contracts](docs/API_CONTRACT.md), [design](docs/DESIGN_SYSTEM.md), and [contributing](docs/CONTRIBUTING.md).
 
 ## MVP Acceptance Criteria
 
@@ -210,9 +223,9 @@ Environment variables, service URLs and exact startup instructions will be docum
 
 ## Project Status
 
-**Planning / initialization — MVP v1.0.**
+**Foundation — F00.**
 
-The architecture and requirements are defined. Implementation, deployment and performance validation are pending.
+The application foundation is being initialized. Business features, deployment and performance validation are pending.
 
 ---
 
