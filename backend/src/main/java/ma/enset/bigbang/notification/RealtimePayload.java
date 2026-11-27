@@ -7,6 +7,10 @@ public sealed interface RealtimePayload {
     record EventState(String state) implements RealtimePayload { }
     record ParticipantRegistered(UUID id, int participantNumber, String firstName, String lastName) implements RealtimePayload { }
     record DrawState(UUID drawId, Integer participantNumber) implements RealtimePayload { }
+    record DrawUpdate(UUID drawId, int cycleNumber, String status, Integer participantNumber) implements RealtimePayload { }
+    record DrawAdmin(UUID drawId, int cycleNumber, String status, UUID participantId, int participantNumber, String firstName, String lastName) implements RealtimePayload { }
+    record DrawPrivate(UUID drawId, int cycleNumber, int participantNumber, String message) implements RealtimePayload { }
+    record DrawReset(int previousCycleNumber, int cycleNumber) implements RealtimePayload { }
     record WheelState(UUID drawId, String status) implements RealtimePayload { }
     record QuizState(String status) implements RealtimePayload { }
     record PrivateNotification(String message) implements RealtimePayload { }

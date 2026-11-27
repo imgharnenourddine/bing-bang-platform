@@ -54,4 +54,16 @@ class RealtimeTransactionTest {
             verify(messaging).convertAndSend(eq("/topic/admin"), any(EventEnvelope.class));
         }
     }
+    @Test void drawResetIsDeliveredOnlyAfterCommit() {
+        try (var context = new AnnotationConfigApplicationContext(TestConfig.class)) {
+            var tx = new TransactionTemplate(context.getBean(PlatformTransactionManager.class));
+            var events = context.getBean(RealtimeEvents.class);
+            var messaging = context.getBean(SimpMessagingTemplate.class);
+            tx.executeWithoutResult(status -> { events.drawReset(new RealtimePayload.DrawReset(1, 2)); status.setRollbackOnly(); });
+            verifyNoInteractions(messaging);
+            tx.executeWithoutResult(status -> { events.drawReset(new RealtimePayload.DrawReset(1, 2)); verifyNoInteractions(messaging); });
+            verify(messaging).convertAndSend(eq("/topic/draw"), argThat(value ->
+                    value instanceof EventEnvelope<?> envelope && envelope.type() == EventType.DRAW_RESET));
+        }
+    }
 }
