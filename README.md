@@ -307,3 +307,9 @@ Admins configure STANDARD/PREMIUM prizes, weights, stock and progression, then s
 ## Quiz developer onboarding
 
 Mohammed's Quiz backend and frontend boundaries are reserved; Quiz logic and screens are not yet implemented. Follow [Quiz integration and developer setup](docs/QUIZ_INTEGRATION.md) for both Compose workflows, Git steps, shared identity and STOMP services, proposed routes, migration reservations and test expectations. V7–V19 are reserved for Quiz; coordinate deployment order. The optional `compose.local.yaml` exposes PostgreSQL on localhost only for running Spring Boot outside Docker.
+
+### Participant registration (P01)
+
+Open `/` to register with first and last name. Existing participant sessions go to `/participant`, a temporary holding route showing the actual assigned number; P02 is not implemented. An administrator session is never replaced. The frontend checks `/api/auth/me`, submits to `/api/participants/register`, and uses the shared API client to obtain and send CSRF tokens with session cookies. Names are trimmed and limited to 100 characters. A failed submission can be retried manually; it is never automatically repeated.
+
+The implementation lives in `frontend/src/features/participant`; the partner-logo strip and poster artwork crops are in `frontend/src/assets/participant`. Run the local Vite development server with `cd frontend && npm run dev` and open the URL it prints (normally http://localhost:5173/); the backend and database must also be running for session checking and registration. Browser-level layout and live backend registration still require verification in an environment that permits a local server.

@@ -84,3 +84,7 @@ Award response fields are `awardId`, `drawId`, `participantId` (admin only), `pa
 ## Proposed Quiz namespace — not implemented
 
 Administrator operations are proposed under `/api/admin/quiz/**`; shared participant-facing reads under `/api/quiz/**`; a participant's answer and score operations under `/api/participants/me/quiz/**`. Exact routes, schemas and response codes remain for Mohammed to refine. The admin prefix is protected by existing security rules. The other proposed namespaces are currently **denied by default** and need explicitly reviewed security matchers before implementation. Resolve identity through `SessionPrincipal`, validate CSRF on mutations, return existing problem/security error formats, and never expose correct answers while a question is open. See [QUIZ_INTEGRATION.md](QUIZ_INTEGRATION.md).
+
+### P01 frontend integration
+
+The registration page at `/` checks `GET /api/auth/me`. A participant is redirected to the temporary `/participant` holding route; an administrator remains signed in and cannot submit registration. An anonymous visitor submits trimmed first and last names to `POST /api/participants/register`; both 201 (created) and 200 (existing) responses provide the authoritative participant identity and number. The shared frontend API client fetches `/api/auth/csrf` and supplies its returned header for mutations with session cookies. It does not automatically retry registration. `/participant` is an integration placeholder, not the P02 interface.

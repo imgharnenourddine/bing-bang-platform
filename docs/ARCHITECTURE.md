@@ -28,3 +28,7 @@ Draw state events reuse F03's AFTER_COMMIT publisher; a failed or missed notific
 ## Quiz integration boundary
 
 Mohammed's Quiz will reuse the modular monolith, participants, session principal, PostgreSQL/Flyway and `/ws` infrastructure. `quiz/` and `features/quiz/` are reserved with documentation; no quiz behavior, UI, routes or tables exist. Shared frontend `services/api.ts` handles session cookies and CSRF; `services/realtime.ts` manages one STOMP connection with bounded reconnect and subscription restoration. Quiz state still comes from future REST endpoints, not messages. V7–V19 are reserved for Quiz, subject to coordinated Flyway deployment order. See [QUIZ_INTEGRATION.md](QUIZ_INTEGRATION.md).
+
+### P01 participant registration frontend
+
+`frontend/src/features/participant` owns the registration view, name validation, session context and thin registration API functions. The existing shared API client remains responsible for cookies and CSRF. Poster-derived assets are located in `frontend/src/assets/participant`; the artwork is decorative and the official partner strip has descriptive alternative text. The `/participant` route is a temporary authenticated holding page for the future P02 integration. Live registration and responsive visual behavior require verification against a running backend and browser.
