@@ -32,3 +32,7 @@ Mohammed's Quiz will reuse the modular monolith, participants, session principal
 ### P01 participant registration frontend
 
 `frontend/src/features/participant` owns the registration view, name validation, session context and thin registration API functions. The existing shared API client remains responsible for cookies and CSRF. Poster-derived assets are located in `frontend/src/assets/participant`; the artwork is decorative and the official partner strip has descriptive alternative text. The `/participant` route hosts P02, with a reusable header, pass and four-item bottom navigation. Draw state comes from REST and is refreshed on relevant private and shared draw events, reconnection, and 30-second visible-page polling. Quiz and dedicated draw and wheel screens remain future work. Live registration and responsive visual behavior require verification against a running backend and browser.
+
+### A02 administrator frontend
+
+The ADMIN-protected `/admin` dashboard uses `AdminLayout` for reusable navigation and the existing API, CSRF and shared STOMP clients. Participant counts, current-cycle draw counts and eligible stock are retrieved independently from the backend. Relevant `/topic/admin` and `/topic/draw` events trigger REST resynchronization; the draw start mutation is never retried automatically. A disconnected broker pauses the draw control until reconnection. A03–A06 interfaces remain unimplemented.
