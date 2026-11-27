@@ -1,6 +1,6 @@
 # Shared API contract
 
-Authentication, participant and draw endpoints below are implemented; other business endpoints remain planned. WebSocket infrastructure is described in [REALTIME_CONTRACT.md](REALTIME_CONTRACT.md). The platform and Mohammed's quiz module must share authentication, participant identity and WebSocket infrastructure; the quiz module is reserved for Mohammed.
+Authentication, participant, draw and wheel endpoints below are implemented; other business endpoints remain planned. WebSocket infrastructure is described in [REALTIME_CONTRACT.md](REALTIME_CONTRACT.md). The platform and Mohammed's quiz module must share authentication, participant identity and WebSocket infrastructure; the quiz module is reserved for Mohammed.
 
 | Concept | Planned convention |
 | --- | --- |
@@ -61,3 +61,22 @@ All `/api/admin/draw/**` endpoints require `ADMIN`; all POSTs require CSRF. Busi
 | `GET /api/participants/me/draw` | PARTICIPANT only; own current-cycle selection, active flag, draw ID and status |
 
 A cancelled participant remains selected in that cycle. Reset closes the current cycle and preserves all prior draws and participant records. The initial cycle is 1; a reset may be early if no draw is active. Duplicate names are allowed and never determine eligibility. Public numbers are not authentication credentials.
+
+## Prize wheel API (F05)
+
+Every `/api/admin/prizes/**` and `/api/admin/wheel/**` route requires ADMIN; mutations require CSRF. Validation errors are 400; missing resources 404; stock, state and concurrency conflicts 409. Responses use problem details with codes on domain errors.
+
+| Method and path | Purpose |
+| --- | --- |
+| `POST /api/admin/prizes` | Create `{name,description,category,baseWeight,initialStock,enabled}`; 201 |
+| `GET /api/admin/prizes`, `GET /api/admin/prizes/{id}` | Inventory |
+| `PATCH /api/admin/prizes/{id}` | Change name, description, category, baseWeight, enabled; stock fields are rejected |
+| `POST /api/admin/prizes/{id}/stock` | `{quantityDelta,reason}`; audited signed stock adjustment |
+| `GET /api/admin/wheel/config`, `PATCH /api/admin/wheel/config` | Read or set `{geometricGrowthFactor,maximumPremiumMultiplier}` without editing progression |
+| `GET /api/admin/wheel/status` | Active draw, progression, multiplier, eligible stock and probabilities; a point-in-time snapshot |
+| `POST /api/admin/wheel/spin` | `{drawId}` only; 201 new award, 200 idempotent retry, 409 if not active or no eligible prizes |
+| `GET /api/admin/wheel/history` | Paginated snapshots; filters `participant`, `prize`, `category`, `draw`, `page`, `size` (1–100) |
+| `GET /api/wheel/status` | Authenticated ADMIN/PARTICIPANT; public state and most recent persisted result |
+| `GET /api/participants/me/prizes` | PARTICIPANT only; own paginated public award history |
+
+Award response fields are `awardId`, `drawId`, `participantId` (admin only), `participantNumber`, `prizeId`, `prizeName`, `prizeCategory`, `awardedBy`, `awardedAt` and admin snapshot details. Public responses omit the participant UUID and inventory/weight details. Segments are snapshotted in deterministic UUID order; display sectors are equal and must disclose the weighted selection. See [prize wheel](PRIZE_WHEEL.md).

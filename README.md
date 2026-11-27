@@ -8,7 +8,7 @@
 
 The interactive event platform for **BING BANG**, a collaborative kick-off event organized by **GDG, AWS Club and N7Geeks** at **ENSET Mohammedia**.
 
-> **Project status:** F01 and F02 add backend administrator authentication and participant registration; F03 adds secure real-time infrastructure; F04 adds backend random draws and resettable cycles. Other business features below are planned.
+> **Project status:** F01 and F02 add backend administrator authentication and participant registration; F03 adds secure real-time infrastructure; F04 adds backend random draws and resettable cycles; F05 adds backend weighted prize allocation. Other business features below are planned.
 
 ## Overview
 
@@ -298,3 +298,8 @@ curl -sS -b /tmp/bigbang-cookies http://localhost:8080/api/admin/draw/history
 ```
 
 The sample uses the admin cookie jar before logout. Completion is internal to a future prize-allocation transaction; no endpoint can mark a draw completed.
+
+
+## Weighted prize wheel (F05)
+
+Admins configure STANDARD/PREMIUM prizes, weights, stock and progression, then spin a specified active draw. The server stores the weighted result, decrements stock and completes the draw atomically. Retrying a draw returns its existing award. The participant can recover their own awards after reconnecting. See [prize wheel](docs/PRIZE_WHEEL.md) for formulas, API examples, lock order, snapshots and deferred tests. The backend is implemented but has not yet passed integration validation.

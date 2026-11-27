@@ -52,6 +52,26 @@ public class RealtimeEvents {
         submit(Target.WHEEL, null, type, payload);
     }
     @Transactional(propagation = Propagation.MANDATORY)
+    public void wheelResult(EventType type, RealtimePayload.WheelResult payload) {
+        require(type, EnumSet.of(EventType.WHEEL_STARTED, EventType.WHEEL_RESULT, EventType.WHEEL_STATE_UPDATED));
+        submit(Target.WHEEL, null, type, payload);
+    }
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void wheelAdmin(EventType type, RealtimePayload.WheelAdmin payload) {
+        require(type, EnumSet.of(EventType.PRIZE_AWARDED, EventType.PRIZE_INVENTORY_UPDATED));
+        submit(Target.ADMIN, null, type, payload);
+    }
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void wheelAvailability(RealtimePayload.WheelAvailability payload) { submit(Target.WHEEL, null, EventType.WHEEL_STATE_UPDATED, payload); }
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void wheelInventory(RealtimePayload.WheelAdmin payload) { submit(Target.ADMIN, null, EventType.PRIZE_INVENTORY_UPDATED, payload); }
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void prizeWon(UUID participantId, RealtimePayload.PrizeWon payload) {
+        Objects.requireNonNull(participantId);
+        if (!participants.existsById(participantId)) throw new IllegalArgumentException("Participant does not exist");
+        submit(Target.PARTICIPANT, participantId, EventType.PRIZE_WON, payload);
+    }
+    @Transactional(propagation = Propagation.MANDATORY)
     public void quiz(EventType type, RealtimePayload.QuizState payload) {
         require(type, EnumSet.of(EventType.QUIZ_OPENED, EventType.QUESTION_OPENED, EventType.QUESTION_CLOSED, EventType.LEADERBOARD_UPDATED, EventType.QUIZ_FINISHED));
         submit(Target.QUIZ, null, type, payload);
