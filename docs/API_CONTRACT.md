@@ -1,6 +1,6 @@
 # Shared API contract
 
-Authentication and participant endpoints below are implemented; other business endpoints and WebSocket contracts remain planned. The platform and Mohammed's quiz module must share authentication, participant identity and WebSocket infrastructure; the quiz module is reserved for Mohammed.
+Authentication and participant endpoints below are implemented; other business endpoints remain planned. WebSocket infrastructure is described in [REALTIME_CONTRACT.md](REALTIME_CONTRACT.md). The platform and Mohammed's quiz module must share authentication, participant identity and WebSocket infrastructure; the quiz module is reserved for Mohammed.
 
 | Concept | Planned convention |
 | --- | --- |
@@ -28,7 +28,7 @@ Authentication and participant endpoints below are implemented; other business e
 | `POST /api/auth/logout` | Authenticated, CSRF required | 204; session invalidated |
 | `/api/admin/**` | ADMIN | 401 unauthenticated; 403 wrong role |
 
-Get a CSRF token before login, send it in the returned header, and obtain a new token after login and logout. Missing or invalid tokens return 403. Validation failures return 400 problem details. Security failures return JSON with `status` and `error`. Other routes are denied by default. The quiz module must reuse these shared session and identity contracts. There is no WebSocket implementation yet.
+Get a CSRF token before login, send it in the returned header, and obtain a new token after login and logout. Missing or invalid tokens return 403. Validation failures return 400 problem details. Security failures return JSON with `status` and `error`. Other routes are denied by default. The quiz module must reuse these shared session and identity contracts. WebSocket subscriptions require an authenticated session and STOMP CONNECT CSRF token.
 
 
 ## Participant registration API

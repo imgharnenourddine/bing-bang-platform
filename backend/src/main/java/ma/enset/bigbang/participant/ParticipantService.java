@@ -19,8 +19,9 @@ import org.springframework.http.HttpStatus;
 public class ParticipantService {
     private final ParticipantRepository participants;
     private final JdbcTemplate jdbc;
-    public ParticipantService(ParticipantRepository participants, JdbcTemplate jdbc) {
-        this.participants = participants; this.jdbc = jdbc;
+    private final ma.enset.bigbang.notification.RealtimeEvents realtime;
+    public ParticipantService(ParticipantRepository participants, JdbcTemplate jdbc, ma.enset.bigbang.notification.RealtimeEvents realtime) {
+        this.participants = participants; this.jdbc = jdbc; this.realtime = realtime;
     }
     public record Registration(ParticipantResponse participant, boolean created) { }
 
@@ -38,6 +39,8 @@ public class ParticipantService {
         Participant participant = participants.saveAndFlush(new Participant(UUID.randomUUID(), number,
                 request.firstName(), request.lastName(), Instant.now()));
         jdbc.update("INSERT INTO participant_registration_sessions (session_digest, participant_id) VALUES (?, ?)", digest, participant.getId());
+        realtime.participantRegistered(new ma.enset.bigbang.notification.RealtimePayload.ParticipantRegistered(
+                participant.getId(), number, participant.getFirstName(), participant.getLastName()));
         return new Registration(ParticipantResponse.from(participant), true);
     }
     @Transactional(readOnly = true)

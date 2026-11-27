@@ -57,6 +57,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/health/liveness", "/actuator/health/readiness", "/api/auth/csrf").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/admin/login", "/api/participants/register").permitAll()
+                .requestMatchers(HttpMethod.GET, "/ws").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/participants/me").hasRole("PARTICIPANT")
                 .requestMatchers(HttpMethod.GET, "/api/auth/me").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/auth/logout").authenticated()
