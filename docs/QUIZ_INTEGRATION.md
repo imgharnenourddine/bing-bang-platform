@@ -41,7 +41,7 @@ docker compose logs backend flyway
 docker compose down
 ```
 
-Frontend: `http://localhost:8088/`; API through the proxy: `http://localhost:8088/api`; backend: `http://localhost:8080`; health: `http://localhost:8080/actuator/health`. PostgreSQL is not exposed on the host in default Compose. The existing frontend container healthcheck has previously reported unhealthy despite the other services starting; it is not disabled or fixed in F06.0. Check actual logs/status. The CI containers job currently uses a fresh database but supplies no `ADMIN_USERNAME`/`ADMIN_PASSWORD`, which can prevent bootstrap; coordinate that integration fix. CI also runs backend verify and frontend lint, typecheck and build.
+Frontend: `http://localhost:8088/`; API through the proxy: `http://localhost:8088/api`; backend: `http://localhost:8080`; health: `http://localhost:8080/actuator/health`. PostgreSQL is not exposed on the host in default Compose. F07 changes the frontend healthcheck to the explicit IPv4 `/healthz` endpoint and supplies disposable administrator credentials to CI. The previous unhealthy cause is not confirmed, and the correction still needs a real Docker run. Check actual logs/status. CI also runs backend verify and frontend lint, typecheck and build.
 
 ## 5. Option B — PostgreSQL and Flyway in Docker, backend and Vite locally
 
