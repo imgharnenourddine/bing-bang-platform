@@ -44,3 +44,7 @@ The role-protected `/admin/draw` page reuses `AdminLayout` and the official A02 
 ### A05 administrator prize management
 
 `/admin/prizes` uses the ADMIN route guard and shared administrator layout, API and STOMP services. Inventory and probability configuration come from separate REST endpoints; mutations refresh authoritative state, are never retried automatically, and are disabled when a refresh fails. Wheel probability progression and award history remain backend-owned.
+
+### A06 participant administration
+
+`/admin/participants` is an ADMIN-protected read-only view. It retrieves all participant pages sequentially (backend limit 100) for whole-list local search, deduplicates by persistent ID and paginates the filtered results. The total comes from the dedicated count endpoint. Registration events and reconnection cause REST refresh using the shared STOMP service. These requests do not form one database snapshot; live concurrent-registration behavior remains to be validated.
