@@ -29,10 +29,12 @@ public class AuthController {
     private final SessionAuthenticationStrategy sessions;
     private final CsrfTokenRepository csrfTokens;
     private final LoginRateLimiter limiter;
+    private final ma.enset.bigbang.participant.ParticipantService participants;
     public AuthController(AuthenticationManager authenticationManager, SecurityContextRepository contexts,
-                          SessionAuthenticationStrategy sessions, CsrfTokenRepository csrfTokens, LoginRateLimiter limiter) {
+                          SessionAuthenticationStrategy sessions, CsrfTokenRepository csrfTokens, LoginRateLimiter limiter,
+                          ma.enset.bigbang.participant.ParticipantService participants) {
         this.authenticationManager = authenticationManager; this.contexts = contexts; this.sessions = sessions;
-        this.csrfTokens = csrfTokens; this.limiter = limiter;
+        this.csrfTokens = csrfTokens; this.limiter = limiter; this.participants = participants;
     }
     public record LoginRequest(@NotBlank @Size(max=100) String username, @NotBlank @Size(max=72) String password) { }
     public record Identity(java.util.UUID id, String username, Role role) { }
@@ -67,7 +69,10 @@ public class AuthController {
         }
     }
     @GetMapping("/me")
-    public Identity me(Authentication authentication) { return identity(authentication); }
+    public Object me(Authentication authentication) {
+        var principal = (SessionPrincipal) authentication.getPrincipal();
+        return principal.role() == Role.PARTICIPANT ? participants.findById(principal.id()) : identity(authentication);
+    }
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(Authentication authentication, HttpServletRequest request, HttpServletResponse response) {
         csrfTokens.saveToken(null, request, response);
