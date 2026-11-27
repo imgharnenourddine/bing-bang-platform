@@ -28,8 +28,10 @@ P01 participant registration is implemented at `/`, with the P02 home at `/parti
 
 A01 administrator login lives at `/admin/login`; `/admin` is the role-protected A02 dashboard. Reuse the existing session context and shared CSRF-aware API client. Participant sessions require explicit logout before administrator login. Live backend and browser verification remains outstanding; see README. Do not commit the unrelated reconciliation report with A01.
 
-A02 uses the reusable administrator layout and shared API/STOMP services. Its dashboard shows authoritative REST counts and draw state; draw and wheel management are available; prize and Quiz management remain future work. See README for live-validation limits.
+A02 uses the reusable administrator layout and shared API/STOMP services. Its dashboard shows authoritative REST counts and draw state; draw and wheel management are available; prize management is available and Quiz management remains future work. See README for live-validation limits.
 
 A03 Lucky Draw management is at `/admin/draw`, protected by the existing ADMIN guard and using the A02 layout and official logo header. Cancellation consumes eligibility for the cycle; reset starts a new cycle and preserves draws, awards, inventory and premium progression. Never add participant draw or wheel screens. Live browser/backend validation remains required.
 
 A04 is the ADMIN-only wheel at `/admin/wheel`. The backend owns selection, allocation and notifications; frontend animation uses a frozen eligible-segment snapshot and must never determine the award. Keep pending draw recovery and CSRF/session protections. Live browser and backend verification remains outstanding.
+
+A05 prize inventory and premium settings live at `/admin/prizes`; reuse the ADMIN guard, audited stock endpoint, and shared event infrastructure. Do not alter historical awards or progression via inventory edits. Live integration and visual verification remain required.

@@ -40,3 +40,7 @@ The ADMIN-protected `/admin` dashboard uses `AdminLayout` for reusable navigatio
 ### A03 Lucky Draw management
 
 The role-protected `/admin/draw` page reuses `AdminLayout` and the official A02 header. It calls the existing draw status, start, cancel, reset and paginated history endpoints, plus participant count; confirmations precede cancel/reset, and the reset includes the last authoritative expected cycle number. STOMP events and reconnects trigger REST refresh; failed or uncertain mutations are not automatically repeated. A04 remains unimplemented.
+
+### A05 administrator prize management
+
+`/admin/prizes` uses the ADMIN route guard and shared administrator layout, API and STOMP services. Inventory and probability configuration come from separate REST endpoints; mutations refresh authoritative state, are never retried automatically, and are disabled when a refresh fails. Wheel probability progression and award history remain backend-owned.
