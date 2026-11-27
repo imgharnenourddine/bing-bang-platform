@@ -45,7 +45,7 @@ class PostgresRegistrationConcurrencyTest {
                                     rs.getString("last_name"), rs.getTimestamp("created_at").toInstant()), id);
                     return rows.stream().findFirst();
                 });
-                var service = new ParticipantService(repository, jdbc);
+                var service = new ParticipantService(repository, jdbc, mock(ma.enset.bigbang.notification.RealtimeEvents.class));
                 var transactions = new TransactionTemplate(new DataSourceTransactionManager(dataSource));
                 var start = new CountDownLatch(1);
                 try (var executor = Executors.newFixedThreadPool(2)) {

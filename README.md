@@ -8,7 +8,7 @@
 
 The interactive event platform for **BING BANG**, a collaborative kick-off event organized by **GDG, AWS Club and N7Geeks** at **ENSET Mohammedia**.
 
-> **Project status:** F01 and F02 add backend administrator authentication and participant registration. Other business features below are planned.
+> **Project status:** F01 and F02 add backend administrator authentication and participant registration; F03 adds secure real-time infrastructure. Other business features below are planned.
 
 ## Overview
 
@@ -274,3 +274,8 @@ rm -f /tmp/bigbang-participant-cookies
 ```
 
 Administrators can use `GET /api/admin/participants?page=0&size=20` and `GET /api/admin/participants/count` with an authenticated admin session. See [API contracts](docs/API_CONTRACT.md) for statuses and response shapes.
+
+
+## Real-time infrastructure (F03)
+
+The backend provides session-authenticated STOMP over `/ws`, with CSRF required on CONNECT. Role-restricted subscriptions and typed after-commit events are documented in [REALTIME_CONTRACT.md](docs/REALTIME_CONTRACT.md), including manual testing and reconnection. Only new participant registration currently emits a business notification, to administrators. WebSocket delivery is best-effort; use REST for authoritative state. Configure `WS_ALLOWED_ORIGINS` with exact browser origins; production requires HTTPS/WSS. The in-process broker requires a single backend instance until cross-instance delivery is designed.
