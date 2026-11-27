@@ -1,6 +1,6 @@
 # Shared API contract
 
-Authentication and participant endpoints below are implemented; other business endpoints remain planned. WebSocket infrastructure is described in [REALTIME_CONTRACT.md](REALTIME_CONTRACT.md). The platform and Mohammed's quiz module must share authentication, participant identity and WebSocket infrastructure; the quiz module is reserved for Mohammed.
+Authentication, participant and draw endpoints below are implemented; other business endpoints remain planned. WebSocket infrastructure is described in [REALTIME_CONTRACT.md](REALTIME_CONTRACT.md). The platform and Mohammed's quiz module must share authentication, participant identity and WebSocket infrastructure; the quiz module is reserved for Mohammed.
 
 | Concept | Planned convention |
 | --- | --- |
@@ -45,3 +45,19 @@ Registration and participant identity responses contain `id` (UUID), `participan
 Clients must obtain `/api/auth/csrf` first, retain the cookie and send its token header on registration. Authentication rotates the session and clears the CSRF token: obtain a fresh one for subsequent state-changing requests. Repeated requests from an established registration session resolve to the same participant, including concurrent requests. Separate sessions, browsers and devices are not a reliable indicator of a unique person; losing a session cannot restore the identity. A PostgreSQL sequence guarantees unique numbers under concurrency but gaps can occur on rollback.
 
 Future draw, wheel, notification and quiz modules may use `ParticipantService.findById`, `list`, and `count`; UUID is the internal identity and participantNumber is the public identifier. Do not infer authorization from the public number.
+
+## Draw API (F04)
+
+All `/api/admin/draw/**` endpoints require `ADMIN`; all POSTs require CSRF. Business conflicts return RFC 9457 problem details with a `code` such as `DRAW_ACTIVE`, `NO_PARTICIPANTS`, `NO_ELIGIBLE_PARTICIPANTS`, `STALE_CYCLE`, `INVALID_DRAW_TRANSITION` or `DRAW_CONFLICT`.
+
+| Method and path | Result |
+| --- | --- |
+| `POST /api/admin/draw/start` | 201 active draw and admin-visible participant; no selection parameters accepted; 409 on an active draw or no eligible participants |
+| `GET /api/admin/draw/status` | Current cycle, registered/selected/eligible counts, active draw, `canStartDraw`, `canReset` |
+| `POST /api/admin/draw/reset` | JSON `{ "confirmed": true, "expectedCycleNumber": 1 }`; returns previous/current cycle and counts; 400 invalid confirmation, 409 active or stale cycle |
+| `POST /api/admin/draw/{drawId}/cancel` | Cancels ACTIVE draw; 404 unknown draw, 409 invalid transition |
+| `GET /api/admin/draw/history` | `{content, page, size, totalElements}`; optional `cycleNumber`, `status`, `page` and `size` (1–100); descending creation order |
+| `GET /api/draw/current` | ADMIN or PARTICIPANT; cycle, active flag, active draw's public number and status only |
+| `GET /api/participants/me/draw` | PARTICIPANT only; own current-cycle selection, active flag, draw ID and status |
+
+A cancelled participant remains selected in that cycle. Reset closes the current cycle and preserves all prior draws and participant records. The initial cycle is 1; a reset may be early if no draw is active. Duplicate names are allowed and never determine eligibility. Public numbers are not authentication credentials.

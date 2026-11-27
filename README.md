@@ -8,7 +8,7 @@
 
 The interactive event platform for **BING BANG**, a collaborative kick-off event organized by **GDG, AWS Club and N7Geeks** at **ENSET Mohammedia**.
 
-> **Project status:** F01 and F02 add backend administrator authentication and participant registration; F03 adds secure real-time infrastructure. Other business features below are planned.
+> **Project status:** F01 and F02 add backend administrator authentication and participant registration; F03 adds secure real-time infrastructure; F04 adds backend random draws and resettable cycles. Other business features below are planned.
 
 ## Overview
 
@@ -279,3 +279,22 @@ Administrators can use `GET /api/admin/participants?page=0&size=20` and `GET /ap
 ## Real-time infrastructure (F03)
 
 The backend provides session-authenticated STOMP over `/ws`, with CSRF required on CONNECT. Role-restricted subscriptions and typed after-commit events are documented in [REALTIME_CONTRACT.md](docs/REALTIME_CONTRACT.md), including manual testing and reconnection. Only new participant registration currently emits a business notification, to administrators. WebSocket delivery is best-effort; use REST for authoritative state. Configure `WS_ALLOWED_ORIGINS` with exact browser origins; production requires HTTPS/WSS. The in-process broker requires a single backend instance until cross-instance delivery is designed.
+
+
+## Random draw engine (F04)
+
+Admins can start and cancel one active draw and reset eligibility by creating a new cycle. PostgreSQL locks and constraints protect concurrency and preserve history; cancelled participants remain selected until reset. Selection is uniform using `SecureRandom` over the eligible UUIDs, independently of any future weighted prize wheel. All mutations require the existing admin session and CSRF token. The initial cycle is 1. See [draw API](docs/API_CONTRACT.md), [architecture](docs/ARCHITECTURE.md), and [real-time contract](docs/REALTIME_CONTRACT.md). Full PostgreSQL concurrency and WebSocket integration tests remain to be run in F07.
+
+After authenticating as admin using the earlier cookie-jar instructions, obtain a fresh token and run:
+
+```bash
+TOKEN=$(curl -sS -b /tmp/bigbang-cookies -c /tmp/bigbang-cookies http://localhost:8080/api/auth/csrf | jq -r .token)
+curl -sS -b /tmp/bigbang-cookies -H "X-CSRF-TOKEN: $TOKEN" -X POST http://localhost:8080/api/admin/draw/start
+curl -sS -b /tmp/bigbang-cookies http://localhost:8080/api/admin/draw/status
+# Cancel the active draw using its returned ID, then reset the expected cycle.
+curl -sS -b /tmp/bigbang-cookies -H "X-CSRF-TOKEN: $TOKEN" -X POST http://localhost:8080/api/admin/draw/DRAW_UUID/cancel
+curl -sS -b /tmp/bigbang-cookies -H 'Content-Type: application/json' -H "X-CSRF-TOKEN: $TOKEN" -d '{"confirmed":true,"expectedCycleNumber":1}' http://localhost:8080/api/admin/draw/reset
+curl -sS -b /tmp/bigbang-cookies http://localhost:8080/api/admin/draw/history
+```
+
+The sample uses the admin cookie jar before logout. Completion is internal to a future prize-allocation transaction; no endpoint can mark a draw completed.

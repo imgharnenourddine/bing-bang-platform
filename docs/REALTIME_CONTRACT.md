@@ -1,6 +1,6 @@
 # Real-time contract
 
-F03 provides backend infrastructure, not the future draw, wheel or quiz business flows. The event names below are reserved contracts. PostgreSQL remains authoritative; business commands use REST. WebSocket delivery is best-effort and has no replay or guaranteed ordering. An event may be lost after a successful database commit. No notification history or outbox is implemented.
+F03 provides backend infrastructure and F04 adds the draw business flow. Wheel and quiz event names below remain reserved contracts. PostgreSQL remains authoritative; business commands use REST. WebSocket delivery is best-effort and has no replay or guaranteed ordering. An event may be lost after a successful database commit. No notification history or outbox is implemented.
 
 ## Connect and authenticate
 
@@ -30,7 +30,7 @@ All other subscriptions are denied. No application SEND destinations are approve
 
 `eventId` is a unique UUID, `timestamp` an ISO 8601 UTC instant, and `version` currently 1. Payloads are explicit Java records and never JPA entities. `EVENT_STATE_UPDATED` uses `EventState`; `PARTICIPANT_REGISTERED` uses `ParticipantRegistered` and is sent **only** to `/topic/admin`. `DRAW_STARTED`, `DRAW_PARTICIPANT_SELECTED`, `DRAW_COMPLETED` use `DrawState`; `WHEEL_STARTED`, `WHEEL_RESULT`, `PRIZE_AWARDED` use `WheelState`; `QUIZ_OPENED`, `QUESTION_OPENED`, `QUESTION_CLOSED`, `LEADERBOARD_UPDATED`, `QUIZ_FINISHED` use `QuizState`; private `PARTICIPANT_SELECTED` and `PRIZE_WON` use `PrivateNotification`. These minimal DTOs will need explicit versioned evolution with their owning modules. Never put correct answers in an event before question closure.
 
-The only concrete business integration in F03 is `PARTICIPANT_REGISTERED`. A new participant generates one admin event; a repeated registration returning an existing participant does not. Participant names are not sent to shared topics.
+The concrete business integration in F03 is `PARTICIPANT_REGISTERED`; F04 draw events are specified below. A new participant generates one admin event; a repeated registration returning an existing participant does not. Participant names are not sent to shared topics.
 
 ## Publishing from backend business services
 
@@ -66,3 +66,9 @@ The simple broker is **instance-local**. Spring Session JDBC shares HTTP session
 ## Manual test
 
 With the backend and database running, obtain an authenticated session cookie and a fresh CSRF token using the curl examples in the README. Use a STOMP-capable client that supports sending the `SESSION` cookie in the WebSocket handshake, an allowed `Origin`, and the CSRF token in the STOMP CONNECT native header. Subscribe to `/topic/admin` as an admin; register a participant from a separate cookie jar. The admin should receive `PARTICIPANT_REGISTERED`, while a participant subscription to `/topic/admin` and direct SEND to `/topic/event` should be rejected. Log out and verify subsequent delivery stops and the socket closes. Do not use a public third-party WebSocket test site with real session cookies.
+
+## F04 draw events
+
+F04 adds `DRAW_CANCELLED`, `DRAW_RESET` and `DRAW_STATE_UPDATED` to the existing draw event types. On start, `/topic/draw` receives `DRAW_STARTED`, `DRAW_PARTICIPANT_SELECTED` and `DRAW_STATE_UPDATED` with `DrawUpdate {drawId, cycleNumber, status, participantNumber}`; `/topic/admin` receives `DRAW_PARTICIPANT_SELECTED` with `DrawAdmin {drawId, cycleNumber, status, participantId, participantNumber, firstName, lastName}`. The selected participant alone receives `PARTICIPANT_SELECTED` with `DrawPrivate {drawId, cycleNumber, participantNumber, message}` on their private queue. Names and UUIDs of participants are not sent to the shared draw topic.
+
+Cancellation and internal completion publish `DRAW_CANCELLED` or `DRAW_COMPLETED` plus `DRAW_STATE_UPDATED` to the shared topic and detailed events to admins. Reset publishes `DRAW_RESET` with `DrawReset {previousCycleNumber, cycleNumber}` plus a cleared `DRAW_STATE_UPDATED`. These notifications are scheduled only within the transaction and delivered after commit. REST `/api/draw/current` and `/api/participants/me/draw` let clients recover state after reconnecting. F03's original `DrawState` publisher remains available for backward compatibility; new F04 events use the richer DTOs above.
