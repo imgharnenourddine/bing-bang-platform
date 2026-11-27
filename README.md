@@ -8,7 +8,7 @@
 
 The interactive event platform for **BING BANG**, a collaborative kick-off event organized by **GDG, AWS Club and N7Geeks** at **ENSET Mohammedia**.
 
-> **Project status:** F01 adds backend administrator authentication to the foundation and placeholder home page. Other business features below are planned.
+> **Project status:** F01 and F02 add backend administrator authentication and participant registration. Other business features below are planned.
 
 ## Overview
 
@@ -223,7 +223,7 @@ For backend development outside Compose, run PostgreSQL and the Flyway migration
 
 ## Project Status
 
-**F01 — Backend authentication in development.**
+**F02 — Participant registration in development.**
 
 The application foundation is being initialized. Business features, deployment and performance validation are pending.
 
@@ -254,3 +254,23 @@ rm -f /tmp/bigbang-cookies
 ```
 
 See [API contracts](docs/API_CONTRACT.md) for response codes. CSRF is required for login and logout, and a fresh token is needed after each. No participant registration or quiz functionality is included.
+
+
+## Participant registration (F02)
+
+Registration accepts first and last names only. A PostgreSQL sequence assigns a positive unique number; rollbacks can cause gaps. A successful registration authenticates the participant in the existing JDBC-backed session. Repeated registration in the same established session returns the existing participant. Identical names are allowed. A new browser or lost session cannot be linked reliably to the same person.
+
+With the backend running and `jq` installed, a minimal local test is:
+
+```bash
+TOKEN=$(curl -sS -c /tmp/bigbang-participant-cookies http://localhost:8080/api/auth/csrf | jq -r .token)
+curl -sS -b /tmp/bigbang-participant-cookies -c /tmp/bigbang-participant-cookies \
+  -H 'Content-Type: application/json' -H "X-CSRF-TOKEN: $TOKEN" \
+  -d '{"firstName":"Ahmed","lastName":"Alami"}' http://localhost:8080/api/participants/register
+curl -sS -b /tmp/bigbang-participant-cookies http://localhost:8080/api/participants/me
+curl -sS -b /tmp/bigbang-participant-cookies http://localhost:8080/api/auth/me
+# Fetch a fresh CSRF token after registration before further POST requests.
+rm -f /tmp/bigbang-participant-cookies
+```
+
+Administrators can use `GET /api/admin/participants?page=0&size=20` and `GET /api/admin/participants/count` with an authenticated admin session. See [API contracts](docs/API_CONTRACT.md) for statuses and response shapes.

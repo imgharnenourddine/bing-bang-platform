@@ -29,6 +29,7 @@ class SecurityConfigTest {
     @Autowired PasswordEncoder encoder;
     @MockBean AdministratorRepository repository;
     @MockBean LoginRateLimiter limiter;
+    @MockBean ma.enset.bigbang.participant.ParticipantService participants;
     @BeforeEach void setup() { when(limiter.tryAcquire(anyString())).thenReturn(true); }
     @Test void csrfIsRequiredForLogin() throws Exception {
         mvc.perform(post("/api/auth/admin/login").contentType(MediaType.APPLICATION_JSON).content("{}"))
