@@ -88,3 +88,7 @@ Administrator operations are proposed under `/api/admin/quiz/**`; shared partici
 ### P01 frontend integration
 
 The registration page at `/` checks `GET /api/auth/me`. A participant is redirected to the `/participant` home; an administrator remains signed in and cannot submit registration. An anonymous visitor submits trimmed first and last names to `POST /api/participants/register`; both 201 (created) and 200 (existing) responses provide the authoritative participant identity and number. The shared frontend API client fetches `/api/auth/csrf` and supplies its returned header for mutations with session cookies. It does not automatically retry registration. The participant home uses `GET /api/participants/me/draw` for authoritative eligibility; Quiz and dedicated Draw screens are not yet available.
+
+### A01 administrator frontend
+
+`/admin/login` reuses `/api/auth/me`, `/api/auth/admin/login` and `/api/auth/logout` with the shared CSRF-aware client. It verifies the ADMIN session after login and provides an explicit participant-session logout before login. `/admin` is a role-checked frontend holding page; backend API authorization remains authoritative. The client-side session check cannot prevent an identity change in another tab between its check and the login request; the login endpoint currently accepts an existing participant session. A server-side guard and concurrency test are needed for a strict no-replacement guarantee.
