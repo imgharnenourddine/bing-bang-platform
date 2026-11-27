@@ -92,3 +92,7 @@ The registration page at `/` checks `GET /api/auth/me`. A participant is redirec
 ### A01 administrator frontend
 
 `/admin/login` reuses `/api/auth/me`, `/api/auth/admin/login` and `/api/auth/logout` with the shared CSRF-aware client. It verifies the ADMIN session after login and provides an explicit participant-session logout before login. `/admin` is a role-checked frontend holding page; backend API authorization remains authoritative. The client-side session check cannot prevent an identity change in another tab between its check and the login request; the login endpoint currently accepts an existing participant session. A server-side guard and concurrency test are needed for a strict no-replacement guarantee.
+
+### A06 administrator participant view
+
+The read-only `/admin/participants` frontend uses the ADMIN endpoints `GET /api/admin/participants?page=...&size=...` and `GET /api/admin/participants/count`. The backend sorts by public participant number and limits page size to 100. The current participant response does not include registration time. The UI loads all pages sequentially for search and uses the dedicated count response for the total; it does not create or modify participants.

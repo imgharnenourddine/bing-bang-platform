@@ -332,7 +332,7 @@ For local testing, start PostgreSQL, Flyway and the backend as documented above,
 
 `/admin` uses the shared ADMIN route guard and `frontend/src/features/admin/AdminLayout.tsx` for its responsive sidebar. The four KPI cards use `/api/admin/participants/count`, `/api/admin/draw/status`, and enabled, positive stock from `/api/admin/prizes`. The draw action calls `POST /api/admin/draw/start` with the shared CSRF/session client. Active draw details come from the admin draw status response; that endpoint does not include the last completed or cancelled draw when no draw is active.
 
-The dashboard listens on `/topic/admin` and `/topic/draw`, deduplicates events and resynchronizes REST state on relevant events and reconnect. It does not poll; live updates are best effort. Draw controls are paused while the real-time connection is unavailable and whenever authoritative draw state is unavailable. Participant and Quiz administration remain future interfaces. Browser, live REST/STOMP and responsive visual checks remain necessary.
+The dashboard listens on `/topic/admin` and `/topic/draw`, deduplicates events and resynchronizes REST state on relevant events and reconnect. It does not poll; live updates are best effort. Draw controls are paused while the real-time connection is unavailable and whenever authoritative draw state is unavailable. Quiz administration remains a future interface. Browser, live REST/STOMP and responsive visual checks remain necessary.
 
 ### Lucky Draw management (A03)
 
@@ -351,3 +351,9 @@ The displayed segments stay frozen through the animation. If inventory changes a
 The ADMIN-only `/admin/prizes` interface uses the shared administrator header, session, CSRF client and STOMP service. It lists and searches backend prizes; supports creation, editing, activation and deactivation; and adjusts stock through the audited stock endpoint with a required reason. Initial stock records the original amount; subsequent adjustments change remaining stock without modifying award snapshots. Premium growth factor (1–100) and multiplier (1–1000) are saved explicitly without resetting progression. Failed or uncertain mutations are not automatically retried; server state must refresh before further changes. The dashboard and wheel receive existing after-commit inventory events and reload REST state.
 
 For local verification, run the database and backend, then `cd frontend && npm run dev` and open `http://localhost:5173/admin/prizes` in an administrator session. Browser and live backend verification are still required.
+
+### Participant management (A06)
+
+`/admin/participants` is a read-only ADMIN interface using the shared administrator layout and session. It retrieves the list with sequential bounded `/api/admin/participants` pages and the total from `/api/admin/participants/count`. Names and public numbers are searchable across all retrieved pages, and results are displayed 20 at a time. Registration events on `/topic/admin` and reconnection trigger REST resynchronization; search and the nearest valid page are preserved. The current response does not contain registration timestamps, so no date column is shown.
+
+For local verification, start the backend and database, run `cd frontend && npm run dev`, and open `http://localhost:5173/admin/participants` with an administrator session. Live browser and backend validation remain necessary. Page reads are separate requests, so changes during a multi-page refresh are not a single database snapshot; registration events and reconnects initiate another refresh.
