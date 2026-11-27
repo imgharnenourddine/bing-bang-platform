@@ -41,3 +41,7 @@ curl -sS -b /tmp/bigbang-cookies http://localhost:8080/api/admin/wheel/history
 ```
 
 Register participants and start an active draw before spinning. Replace `DRAW_UUID` with the actual UUID. Do not use real credentials in shell history. The inventory/audit schema, migration, idempotence, probability boundaries, concurrent spin/adjustment/cancellation and notifications require validation on PostgreSQL with real sessions; optional PostgreSQL tests use the `F05_TEST_DB_URL`, `F05_TEST_DB_USER`, `F05_TEST_DB_PASSWORD` variables and a disposable test database.
+
+## A04 administrator wheel
+
+The ADMIN-protected `/admin/wheel` interface displays the eligible segments from wheel status and starts a spin with only the active draw UUID. Backend allocation commits before the cosmetic animation and participant notification timing is unchanged. Equal SVG sectors do not represent the weighted probabilities. For an award at index `i` among `n` frozen sectors, the target rotation is the next rotation of at least five full turns that places the midpoint `(i + 0.5) * 360 / n` at the fixed top pointer. Reduced-motion preferences skip the long animation. A draw ID is stored temporarily in session storage to query award history after interruption; no credential or result is stored. The interface does not automatically retry a spin. Live browser/transaction validation is still required.
