@@ -1,0 +1,5 @@
+# Optional local-development override. PostgreSQL remains unexposed in default Compose.
+services:
+  postgres:
+    ports:
+      - "127.0.0.1:${DB_FORWARD_PORT:-5433}:5432"

@@ -24,3 +24,7 @@ Draw state events reuse F03's AFTER_COMMIT publisher; a failed or missed notific
 ## Prize wheel (F05)
 
 `wheel` stores inventory, one persistent progression/config row, award snapshots and a stock adjustment audit. Spin, inventory and configuration operations acquire `draw_control`, then `wheel_configuration`, then prize rows in UUID order. Spin inserts a unique award per draw, decrements stock, updates progression and calls F04 completion in one transaction. The database enforces nonnegative stock and valid weights, categories and probability. F03 publishes typed wheel/admin/private events after commit; REST remains authoritative. Draw reset is independent of all wheel state. See [PRIZE_WHEEL.md](PRIZE_WHEEL.md) for numeric bounds, precision and unvalidated integration limitations.
+
+## Quiz integration boundary
+
+Mohammed's Quiz will reuse the modular monolith, participants, session principal, PostgreSQL/Flyway and `/ws` infrastructure. `quiz/` and `features/quiz/` are reserved with documentation; no quiz behavior, UI, routes or tables exist. Shared frontend `services/api.ts` handles session cookies and CSRF; `services/realtime.ts` manages one STOMP connection with bounded reconnect and subscription restoration. Quiz state still comes from future REST endpoints, not messages. V7–V19 are reserved for Quiz, subject to coordinated Flyway deployment order. See [QUIZ_INTEGRATION.md](QUIZ_INTEGRATION.md).

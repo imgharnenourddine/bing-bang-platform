@@ -80,3 +80,7 @@ Every `/api/admin/prizes/**` and `/api/admin/wheel/**` route requires ADMIN; mut
 | `GET /api/participants/me/prizes` | PARTICIPANT only; own paginated public award history |
 
 Award response fields are `awardId`, `drawId`, `participantId` (admin only), `participantNumber`, `prizeId`, `prizeName`, `prizeCategory`, `awardedBy`, `awardedAt` and admin snapshot details. Public responses omit the participant UUID and inventory/weight details. Segments are snapshotted in deterministic UUID order; display sectors are equal and must disclose the weighted selection. See [prize wheel](PRIZE_WHEEL.md).
+
+## Proposed Quiz namespace — not implemented
+
+Administrator operations are proposed under `/api/admin/quiz/**`; shared participant-facing reads under `/api/quiz/**`; a participant's answer and score operations under `/api/participants/me/quiz/**`. Exact routes, schemas and response codes remain for Mohammed to refine. The admin prefix is protected by existing security rules. The other proposed namespaces are currently **denied by default** and need explicitly reviewed security matchers before implementation. Resolve identity through `SessionPrincipal`, validate CSRF on mutations, return existing problem/security error formats, and never expose correct answers while a question is open. See [QUIZ_INTEGRATION.md](QUIZ_INTEGRATION.md).

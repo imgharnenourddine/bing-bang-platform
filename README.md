@@ -303,3 +303,7 @@ The sample uses the admin cookie jar before logout. Completion is internal to a 
 ## Weighted prize wheel (F05)
 
 Admins configure STANDARD/PREMIUM prizes, weights, stock and progression, then spin a specified active draw. The server stores the weighted result, decrements stock and completes the draw atomically. Retrying a draw returns its existing award. The participant can recover their own awards after reconnecting. See [prize wheel](docs/PRIZE_WHEEL.md) for formulas, API examples, lock order, snapshots and deferred tests. The backend is implemented but has not yet passed integration validation.
+
+## Quiz developer onboarding
+
+Mohammed's Quiz backend and frontend boundaries are reserved; Quiz logic and screens are not yet implemented. Follow [Quiz integration and developer setup](docs/QUIZ_INTEGRATION.md) for both Compose workflows, Git steps, shared identity and STOMP services, proposed routes, migration reservations and test expectations. V7–V19 are reserved for Quiz; coordinate deployment order. The optional `compose.local.yaml` exposes PostgreSQL on localhost only for running Spring Boot outside Docker.
