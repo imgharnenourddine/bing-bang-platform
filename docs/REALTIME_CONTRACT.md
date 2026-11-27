@@ -81,7 +81,7 @@ After successful allocation, `/topic/wheel` receives `WHEEL_STARTED`, `WHEEL_RES
 
 ## Quiz handoff
 
-`/topic/quiz` and the five existing `QUIZ_OPENED`, `QUESTION_OPENED`, `QUESTION_CLOSED`, `LEADERBOARD_UPDATED`, `QUIZ_FINISHED` event types are available, but the only currently implemented Quiz payload is `RealtimePayload.QuizState(String status)`. Question and leaderboard DTOs and business publication do not yet exist. Mohammed should coordinate additions and versioned contracts with the Tech Lead; do not publish correct answers before closure or another participant's private answer. `frontend/src/services/realtime.ts` provides a shared authenticated STOMP connection; clients should use `onConnected` to retrieve authoritative state over REST after reconnect. See [QUIZ_INTEGRATION.md](QUIZ_INTEGRATION.md).
+`/topic/quiz` and the five existing `QUIZ_OPENED`, `QUESTION_OPENED`, `QUESTION_CLOSED`, `LEADERBOARD_UPDATED`, `QUIZ_FINISHED` event types are available, but the only currently implemented Quiz payload is `RealtimePayload.QuizState(String status)`. Question and leaderboard DTOs and business publication do not yet exist. The Tech Lead owns additions and versioned contracts; do not publish correct answers before closure or another participant's private answer. `frontend/src/services/realtime.ts` provides a shared authenticated STOMP connection; clients should use `onConnected` to retrieve authoritative state over REST after reconnect. See [QUIZ_INTEGRATION.md](QUIZ_INTEGRATION.md).
 
 ## Participant home integration
 

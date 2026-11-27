@@ -2,7 +2,7 @@
 
 A modular monolith hosts one Spring Boot application and one PostgreSQL database; the React client uses same-origin `/api` and `/ws` via Nginx. PostgreSQL is authoritative. Docker Compose waits for database health, a successful dedicated Flyway migration and backend readiness, in that order. Actuator exposes health probes; JPA validates instead of creating schema. Flyway is not an application dependency and runs only in the migration container.
 
-Planned backend features: `auth` (identity and access), `event` (event state), `participant` (registration and identity), `draw` (selection), `wheel` (prizes), `quiz` (Mohammed's ownership), `notification` (notifications); `common` holds shared errors, `config` infrastructure configuration. Auth, participant, draw, wheel, and real-time infrastructure are implemented; remaining business features are planned. Planned frontend boundaries are auth, participant, admin, draw, wheel, quiz; shared UI, layouts, hooks, services, styles, assets and types support them. Empty feature folders are not tracked until they contain work.
+Planned backend features: `auth` (identity and access), `event` (event state), `participant` (registration and identity), `draw` (selection), `wheel` (prizes), `quiz` (Tech Lead ownership), `notification` (notifications); `common` holds shared errors, `config` infrastructure configuration. Auth, participant, draw, wheel, and real-time infrastructure are implemented; remaining business features are planned. Planned frontend boundaries are auth, participant, admin, draw, wheel, quiz; shared UI, layouts, hooks, services, styles, assets and types support them. Empty feature folders are not tracked until they contain work.
 
 Authentication uses Spring Security, BCrypt and PostgreSQL-backed Spring Session JDBC with Flyway-owned tables. An administrator bootstrap is serialized with a PostgreSQL transaction advisory lock. Security contexts use a serializable principal without a password hash after authentication. Sessions can be shared across instances without sticky routing. JWT is not used. CSRF is required on state-changing requests, including login and logout. Default cookie flags are HttpOnly, SameSite=Lax, and Secure; the dev profile permits HTTP. All unapproved routes are denied. The `/ws` endpoint uses session-authenticated STOMP with role-restricted subscriptions.
 
@@ -27,7 +27,7 @@ Draw state events reuse F03's AFTER_COMMIT publisher; a failed or missed notific
 
 ## Quiz integration boundary
 
-Mohammed's Quiz will reuse the modular monolith, participants, session principal, PostgreSQL/Flyway and `/ws` infrastructure. `quiz/` and `features/quiz/` are reserved with documentation; no quiz behavior, UI, routes or tables exist. Shared frontend `services/api.ts` handles session cookies and CSRF; `services/realtime.ts` manages one STOMP connection with bounded reconnect and subscription restoration. Quiz state still comes from future REST endpoints, not messages. V7–V19 are reserved for Quiz, subject to coordinated Flyway deployment order. See [QUIZ_INTEGRATION.md](QUIZ_INTEGRATION.md).
+Quiz will reuse the modular monolith, participants, session principal, PostgreSQL/Flyway and `/ws` infrastructure. F06.1 adds Quiz entities and V7 schema; Quiz services, UI and routes do not yet exist. Shared frontend `services/api.ts` handles session cookies and CSRF; `services/realtime.ts` manages one STOMP connection with bounded reconnect and subscription restoration. Quiz state still comes from future REST endpoints, not messages. V7 is allocated to the Quiz foundation and V8–V19 remain reserved for Quiz, subject to coordinated Flyway deployment order. See [QUIZ_INTEGRATION.md](QUIZ_INTEGRATION.md).
 
 ### P01 participant registration frontend
 
@@ -48,3 +48,7 @@ The role-protected `/admin/draw` page reuses `AdminLayout` and the official A02 
 ### A06 participant administration
 
 `/admin/participants` is an ADMIN-protected read-only view. It retrieves all participant pages sequentially (backend limit 100) for whole-list local search, deduplicates by persistent ID and paginates the filtered results. The total comes from the dedicated count endpoint. Registration events and reconnection cause REST refresh using the shared STOMP service. These requests do not form one database snapshot; live concurrent-registration behavior remains to be validated.
+
+### Quiz persistence foundation
+
+F06.1 introduces session, question, option and answer entities with a V7 PostgreSQL schema. Composite foreign keys bind current questions to sessions and options to answer questions; unique constraints protect positions and participant answers. The planned session row lock strategy and deferred service invariants are described in [QUIZ_DOMAIN_MODEL.md](QUIZ_DOMAIN_MODEL.md). Execution and schema validation remain unverified.
