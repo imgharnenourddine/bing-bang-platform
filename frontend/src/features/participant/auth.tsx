@@ -5,7 +5,7 @@ type AuthState = { status: 'checking' | 'anonymous' | 'error' } | { status: 'aut
 interface AuthContextValue {
   state: AuthState;
   checkSession: () => Promise<void>;
-  register: (firstName: string, lastName: string) => Promise<void>;
+  register: (firstName: string, lastName: string) => Promise<boolean>;
 }
 const AuthContext = createContext<AuthContextValue | null>(null);
 
@@ -24,10 +24,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
   useEffect(() => { void checkSession(); }, [checkSession]);
   const register = useCallback(async (firstName: string, lastName: string) => {
-    const identity = await registerParticipant(firstName, lastName);
+    const { identity, created } = await registerParticipant(firstName, lastName);
     // The API interceptor obtains a fresh CSRF token before the next mutation.
     revision.current++;
     setState({ status: 'authenticated', identity });
+    return created;
   }, []);
   return <AuthContext.Provider value={{ state, checkSession, register }}>{children}</AuthContext.Provider>;
 }

@@ -1,5 +1,5 @@
 import { useRef, useState, type FormEvent } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { ArrowRight, CalendarDays, MapPin, UserRound } from 'lucide-react';
 import { ApiError } from '../../services/api';
 import partners from '../../assets/participant/official-partners.webp';
@@ -13,6 +13,7 @@ type Field = 'firstName' | 'lastName';
 
 export function RegistrationPage() {
   const { state, checkSession, register } = useAuth();
+  const navigate = useNavigate();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
@@ -34,7 +35,8 @@ export function RegistrationPage() {
     setSubmitting(true);
     setServerError('');
     try {
-      await register(firstName.trim(), lastName.trim());
+      const created = await register(firstName.trim(), lastName.trim());
+      navigate('/participant', { replace: true, state: created ? { registered: true } : null });
     } catch (error) {
       if (error instanceof ApiError && error.status === 400) {
         setServerError('Please check your names and try again.');
@@ -95,12 +97,4 @@ export function RegistrationPage() {
       </footer>
     </div>
   </main>;
-}
-
-export function ParticipantPlaceholder() {
-  const { state, checkSession } = useAuth();
-  if (state.status === 'checking') return <main className="placeholder-page" role="status">Checking your session…</main>;
-  if (state.status === 'error') return <main className="placeholder-page"><p role="alert">We couldn’t check your session.</p><button className="text-action" onClick={() => void checkSession()}>Try again</button></main>;
-  if (state.status !== 'authenticated' || state.identity.role !== 'PARTICIPANT') return <Navigate to="/" replace />;
-  return <main className="placeholder-page"><p className="placeholder-kicker">THE BIG BANG</p><h1>You’re registered.</h1><p>Your participant number is <strong>#{state.identity.participantNumber}</strong>.</p><p>Your participant page is coming soon.</p></main>;
 }

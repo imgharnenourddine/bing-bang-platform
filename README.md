@@ -310,6 +310,14 @@ Mohammed's Quiz backend and frontend boundaries are reserved; Quiz logic and scr
 
 ### Participant registration (P01)
 
-Open `/` to register with first and last name. Existing participant sessions go to `/participant`, a temporary holding route showing the actual assigned number; P02 is not implemented. An administrator session is never replaced. The frontend checks `/api/auth/me`, submits to `/api/participants/register`, and uses the shared API client to obtain and send CSRF tokens with session cookies. Names are trimmed and limited to 100 characters. A failed submission can be retried manually; it is never automatically repeated.
+Open `/` to register with first and last name. Existing participant sessions go to `/participant`, the participant home and digital pass showing the actual assigned number. An administrator session is never replaced. The frontend checks `/api/auth/me`, submits to `/api/participants/register`, and uses the shared API client to obtain and send CSRF tokens with session cookies. Names are trimmed and limited to 100 characters. A failed submission can be retried manually; it is never automatically repeated.
 
 The implementation lives in `frontend/src/features/participant`; the partner-logo strip and poster artwork crops are in `frontend/src/assets/participant`. Run the local Vite development server with `cd frontend && npm run dev` and open the URL it prints (normally http://localhost:5173/); the backend and database must also be running for session checking and registration. Browser-level layout and live backend registration still require verification in an environment that permits a local server.
+
+### Participant home (P02)
+
+`/participant` requires a participant session and shows the backend identity, ticket-style pass, three club logos, and draw eligibility from `/api/participants/me/draw`. The official five-logo header and club crops are under `frontend/src/assets/participant`; event artwork reuses P01. Registration confirmation appears only after a newly created registration and is cleared from navigation state. The My Pass link scrolls to the existing pass; Quiz and Draw links scroll to honest placeholders pending their screens. No QR verification is implemented.
+
+The shared STOMP service subscribes to the private queue and draw topic, deduplicates received events, refreshes draw state after events and reconnection, and polls every 30 seconds while the page is visible. WebSocket delivery is best effort; missed private notices are not replayed. Session, REST, and WebSocket behavior requires live backend and browser integration verification.
+
+P02 checks in the current development environment: frontend lint, TypeScript, shared tests and production build passed. A visual comparison and live REST/STOMP integration test were blocked because the development server could not bind to localhost (`EPERM`); they remain necessary before treating the screen as fully validated.

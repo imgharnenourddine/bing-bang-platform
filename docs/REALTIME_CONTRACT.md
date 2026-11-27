@@ -82,3 +82,7 @@ After successful allocation, `/topic/wheel` receives `WHEEL_STARTED`, `WHEEL_RES
 ## Quiz handoff
 
 `/topic/quiz` and the five existing `QUIZ_OPENED`, `QUESTION_OPENED`, `QUESTION_CLOSED`, `LEADERBOARD_UPDATED`, `QUIZ_FINISHED` event types are available, but the only currently implemented Quiz payload is `RealtimePayload.QuizState(String status)`. Question and leaderboard DTOs and business publication do not yet exist. Mohammed should coordinate additions and versioned contracts with the Tech Lead; do not publish correct answers before closure or another participant's private answer. `frontend/src/services/realtime.ts` provides a shared authenticated STOMP connection; clients should use `onConnected` to retrieve authoritative state over REST after reconnect. See [QUIZ_INTEGRATION.md](QUIZ_INTEGRATION.md).
+
+## Participant home integration
+
+P02 uses the existing shared STOMP service for `/user/queue/notifications` and `/topic/draw`. It deduplicates event IDs, reads current draw eligibility from REST after relevant events and reconnects, and checks the participant's own award history to recover a missed prize notice. While the page is visible, draw state is also polled every 30 seconds. The service retains its bounded reconnect policy and restores subscriptions; no event replay is assumed. Quiz, P03 and P04 interfaces remain future work. Live end-to-end behavior still requires verification with the running backend.

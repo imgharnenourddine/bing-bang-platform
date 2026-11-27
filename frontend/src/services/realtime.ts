@@ -11,6 +11,8 @@ export interface RealtimeEvent<T> {
 
 type Subscription = { destination: string; callback: (message: IMessage) => void; active?: StompSubscription };
 type ConnectionListener = () => void;
+export type RealtimeStatus = 'connecting' | 'connected' | 'disconnected';
+type StatusListener = (status: RealtimeStatus) => void;
 
 /** One connection per browser application instance. No STOMP SEND API is exposed. */
 class RealtimeService {
@@ -22,11 +24,16 @@ class RealtimeService {
   private timer: ReturnType<typeof setTimeout> | undefined;
   private subscriptions = new Set<Subscription>();
   private listeners = new Set<ConnectionListener>();
+  private statusListeners = new Set<StatusListener>();
+  private status: RealtimeStatus = 'disconnected';
+  private setStatus(status: RealtimeStatus): void { this.status = status; this.statusListeners.forEach(listener => listener(status)); }
+  onStatus(listener: StatusListener): () => void { this.statusListeners.add(listener); listener(this.status); return () => { this.statusListeners.delete(listener); }; }
   private readonly maxAttempts = 8;
 
   start(): void {
     if (this.running) return;
     this.running = true;
+    this.setStatus('connecting');
     this.attempts = 0;
     const generation = ++this.generation;
     void this.connect(generation);
@@ -34,6 +41,7 @@ class RealtimeService {
 
   async stop(): Promise<void> {
     this.running = false;
+    this.setStatus('disconnected');
     this.generation++;
     if (this.timer !== undefined) clearTimeout(this.timer);
     this.timer = undefined;
@@ -79,6 +87,7 @@ class RealtimeService {
       client.onConnect = () => {
         if (!this.running || this.client !== client || generation !== this.generation) return;
         this.attempts = 0;
+        this.setStatus('connected');
         this.subscriptions.forEach(subscription => {
           subscription.active = client.subscribe(subscription.destination, subscription.callback);
         });
@@ -108,7 +117,9 @@ class RealtimeService {
   }
 
   private schedule(generation: number): void {
-    if (!this.running || generation !== this.generation || this.timer !== undefined || this.attempts >= this.maxAttempts) return;
+    if (!this.running || generation !== this.generation || this.timer !== undefined) return;
+    if (this.attempts >= this.maxAttempts) { this.setStatus('disconnected'); return; }
+    this.setStatus('connecting');
     const delay = Math.min(1000 * 2 ** this.attempts++, 30000);
     this.timer = setTimeout(() => { this.timer = undefined; void this.connect(generation); }, delay);
   }

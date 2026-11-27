@@ -38,9 +38,9 @@ test('session recognition, registration responses and failures', async () => {
   globalThis.__apiGet = async () => { throw new globalThis.__MockApiError(401); };
   assert.equal(await module.fetchIdentity(), null);
   globalThis.__apiPost = async (path, data) => { assert.equal(path, '/participants/register'); assert.deepEqual(data, { firstName: 'أحمد', lastName: 'Alami' }); return { status: 201, data: identity }; };
-  assert.deepEqual(await module.registerParticipant('أحمد', 'Alami'), identity);
+  assert.deepEqual(await module.registerParticipant('أحمد', 'Alami'), { identity, created: true });
   globalThis.__apiPost = async () => ({ status: 200, data: identity });
-  assert.deepEqual(await module.registerParticipant('أحمد', 'Alami'), identity);
+  assert.deepEqual(await module.registerParticipant('أحمد', 'Alami'), { identity, created: false });
   globalThis.__apiPost = async () => { throw new Error('network'); };
   await assert.rejects(module.registerParticipant('أحمد', 'Alami'), /network/);
   globalThis.__apiGet = async () => { throw new Error('network'); };
