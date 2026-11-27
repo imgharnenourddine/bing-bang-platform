@@ -8,7 +8,7 @@
 
 The interactive event platform for **BING BANG**, a collaborative kick-off event organized by **GDG, AWS Club and N7Geeks** at **ENSET Mohammedia**.
 
-> **F00 status:** Only the foundation and placeholder home page are implemented. All business features below are planned. JWT is proposed pending approval; the session-based security design below is historical and has not been implemented.
+> **Project status:** F01 adds backend administrator authentication to the foundation and placeholder home page. Other business features below are planned.
 
 ## Overview
 
@@ -75,7 +75,7 @@ WebSocket/STOMP broadcasts committed state changes. REST endpoints provide autho
 | --- | --- |
 | Backend | Java 21, Spring Boot, Maven |
 | Persistence | Spring Data JPA, Hibernate, PostgreSQL |
-| Security | Spring Security; JWT proposed, pending approval |
+| Security | Spring Security, PostgreSQL-backed HTTP sessions, BCrypt and CSRF |
 | Real-time | Spring WebSocket, STOMP |
 | Database migrations | Flyway |
 | Frontend | React, TypeScript, Vite |
@@ -223,10 +223,34 @@ For backend development outside Compose, run PostgreSQL and the Flyway migration
 
 ## Project Status
 
-**Foundation — F00.**
+**F01 — Backend authentication in development.**
 
 The application foundation is being initialized. Business features, deployment and performance validation are pending.
 
 ---
 
 **BING BANG** · GDG × AWS Club × N7Geeks · ENSET Mohammedia
+
+## Administrator authentication (F01)
+
+Authentication uses PostgreSQL-backed HTTP sessions rather than JWT. Before first startup, set both `ADMIN_USERNAME` and `ADMIN_PASSWORD` in your local `.env`; use a unique username and a strong password of 12–72 UTF-8 bytes. The password is hashed with BCrypt and is never overwritten by later starts. After bootstrap, remove these variables from `.env`. Concurrent startup is serialized in PostgreSQL. The migration container must run before the backend.
+
+`SESSION_TIMEOUT` defaults to `30m`; `LOGIN_MAX_ATTEMPTS` to `5`; `LOGIN_WINDOW` to `15m`. `SESSION_COOKIE_SECURE` controls the development cookie; use HTTPS and the `prod` profile in production, which forces secure cookies. Cookies are HttpOnly and SameSite=Lax. The sample `.env` sets secure cookies off for local HTTP only. Never commit real credentials. The in-memory limiter counts attempts per direct peer address and is not shared across instances; reverse proxies can cause clients to share one bucket. Revisit this before multi-instance deployment.
+
+For manual testing, with `jq` installed, start PostgreSQL, Flyway, and the backend (`docker compose up --build -d postgres flyway backend`), then obtain a CSRF token before each state-changing operation. Enter credentials interactively to avoid shell history:
+
+```bash
+read -r -p 'Admin username: ' ADMIN_LOGIN
+read -r -s -p 'Admin password: ' ADMIN_SECRET; echo
+TOKEN=$(curl -sS -c /tmp/bigbang-cookies http://localhost:8080/api/auth/csrf | jq -r .token)
+jq -n --arg username "$ADMIN_LOGIN" --arg password "$ADMIN_SECRET" '{username:$username,password:$password}' |
+  curl -sS -b /tmp/bigbang-cookies -c /tmp/bigbang-cookies -H 'Content-Type: application/json' -H "X-CSRF-TOKEN: $TOKEN" --data-binary @- http://localhost:8080/api/auth/admin/login
+unset ADMIN_SECRET
+curl -sS -b /tmp/bigbang-cookies http://localhost:8080/api/auth/me
+TOKEN=$(curl -sS -b /tmp/bigbang-cookies -c /tmp/bigbang-cookies http://localhost:8080/api/auth/csrf | jq -r .token)
+curl -i -b /tmp/bigbang-cookies -c /tmp/bigbang-cookies -X POST -H "X-CSRF-TOKEN: $TOKEN" http://localhost:8080/api/auth/logout
+curl -i -b /tmp/bigbang-cookies http://localhost:8080/api/auth/me
+rm -f /tmp/bigbang-cookies
+```
+
+See [API contracts](docs/API_CONTRACT.md) for response codes. CSRF is required for login and logout, and a fresh token is needed after each. No participant registration or quiz functionality is included.

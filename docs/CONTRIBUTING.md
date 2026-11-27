@@ -4,4 +4,4 @@ Inspect existing work and shared contracts before changing a feature. Coordinate
 
 Flyway migrations live in `database/migrations` and run once, before the application. Never edit a migration once applied, including V1. Before writing a migration, coordinate and reserve the next unique version with both developers; use `V<number>__description.sql`. Commit conflicting allocations only after resolving them before either is applied. Use a new forward migration to correct deployed changes.
 
-Run backend `./mvnw verify` and frontend `npm ci`, `npm run lint`, `npm run typecheck`, `npm run build`; run Compose integration when Docker is available. Agents do not perform Git write operations; the Tech Lead manages Git.
+Run backend `./mvnw verify` and frontend `npm ci`, `npm run lint`, `npm run typecheck`, `npm run build`; run Compose integration when Docker is available. Agents may create local feature branches and commits when requested. The Tech Lead handles push and other remote operations.

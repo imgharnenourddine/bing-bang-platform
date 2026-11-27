@@ -1,3 +1,9 @@
 logging:
   level:
     ma.enset.bigbang: DEBUG
+
+server:
+  servlet:
+    session:
+      cookie:
+        secure: ${SESSION_COOKIE_SECURE:false}

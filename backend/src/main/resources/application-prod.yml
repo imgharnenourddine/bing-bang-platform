@@ -1,2 +1,6 @@
 server:
   shutdown: graceful
+  servlet:
+    session:
+      cookie:
+        secure: true
