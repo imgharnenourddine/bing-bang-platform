@@ -124,3 +124,6 @@ F06.5: `GET /api/admin/quiz/leaderboard` requires ADMIN; `GET /api/quiz/me/resul
 
 
 Participant `GET /api/quiz/status` includes `quizId` and persisted `lifecycleVersion` for REST/STOMP reconciliation. See [QUIZ_REALTIME_SYNCHRONIZATION.md](QUIZ_REALTIME_SYNCHRONIZATION.md).
+
+
+A07 uses the existing `/api/admin/quiz` configuration, question, readiness, lifecycle and statistics contracts. Lifecycle mutations include expected version and current question where required; no new endpoint is introduced.
