@@ -191,4 +191,7 @@ See [API_CONTRACT.md](API_CONTRACT.md) for the implemented ADMIN-only quiz and q
 
 ## F06.3 lifecycle
 
-ADMIN lifecycle routes and the PARTICIPANT-only `/api/quiz/status` are implemented; see [QUIZ_LIFECYCLE.md](QUIZ_LIFECYCLE.md). The participant DTO exposes no correct-answer flags. Answer admission, scoring and Quiz event publication remain future milestones. V8 stores closing cutoffs and per-question timings; migration and concurrency behavior remain unverified until tested against PostgreSQL.
+ADMIN lifecycle routes and the PARTICIPANT-only `/api/quiz/status` are implemented; see [QUIZ_LIFECYCLE.md](QUIZ_LIFECYCLE.md). The participant DTO exposes no correct-answer flags. Answer admission and fixed scoring are implemented in F06.4; Quiz event publication remains a future milestone. V8 stores closing cutoffs and per-question timings; migration and concurrency behavior remain unverified until tested against PostgreSQL.
+
+
+F06.4 implements authenticated participant answers, recovery and closed-question feedback, and ADMIN answer counts; see [QUIZ_ANSWER_AND_SCORING.md](QUIZ_ANSWER_AND_SCORING.md). Leaderboard and complete Quiz events remain future work.

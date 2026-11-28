@@ -43,3 +43,6 @@ F06.1 adds the Quiz persistence foundation and V7. See docs/QUIZ_DOMAIN_MODEL.md
 F06.2 provides ADMIN-only quiz preparation endpoints under `/api/admin/quiz`. All preparation mutations are DRAFT-only, take the quiz row lock and require the current aggregate version. Creation uses a PostgreSQL advisory transaction lock. F06.3 must independently revalidate readiness and use compatible locks. Live PostgreSQL, security and API verification remain required.
 
 F06.3 adds Quiz lifecycle and V8 timing history. Use the same session-row lock as preparation; participant answers must use a shared lock and enforce the persisted deadline. No Quiz lifecycle events are published yet. PostgreSQL and live security validation remain required; see docs/QUIZ_LIFECYCLE.md.
+
+
+F06.4 implements participant answer submission and fixed scoring. Preserve shared/read answer locks versus exclusive lifecycle locks, existing-answer idempotency, and closed-question feedback confidentiality; see docs/QUIZ_ANSWER_AND_SCORING.md. PostgreSQL and HTTP integration still require verification.

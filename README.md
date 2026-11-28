@@ -369,3 +369,6 @@ Administrators can create one DRAFT event quiz, edit its title and manage ordere
 ### Quiz lifecycle (F06.3)
 
 The ADMIN Quiz lifecycle opens and closes ordered questions using persisted server deadlines and a shared expiry scheduler; `/api/quiz/status` returns participant-safe current state. V8 retains per-question timing. See [Quiz lifecycle](docs/QUIZ_LIFECYCLE.md) for endpoints, locking and restart behavior. Answers, scoring, results and Quiz event publication remain future work. PostgreSQL migration and runtime integration are not yet verified.
+
+
+F06.4 adds participant answer submission, idempotent recovery, closed-question feedback and fixed scoring, plus administrator answer counts. See [Quiz answer and scoring](docs/QUIZ_ANSWER_AND_SCORING.md) for endpoints, roles, concurrency and verification limitations. Leaderboard and complete Quiz real-time synchronization remain pending.
