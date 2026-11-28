@@ -59,7 +59,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/auth/admin/login", "/api/participants/register").permitAll()
                 .requestMatchers(HttpMethod.GET, "/ws").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/participants/me", "/api/participants/me/draw", "/api/participants/me/prizes").hasRole("PARTICIPANT")
-                .requestMatchers(HttpMethod.GET, "/api/quiz/status", "/api/quiz/questions/*/answer", "/api/quiz/questions/*/feedback").hasRole("PARTICIPANT")
+                .requestMatchers(HttpMethod.GET, "/api/quiz/status", "/api/quiz/me/results", "/api/quiz/questions/*/answer", "/api/quiz/questions/*/feedback").hasRole("PARTICIPANT")
                 .requestMatchers(HttpMethod.POST, "/api/quiz/answers").hasRole("PARTICIPANT")
                 .requestMatchers(HttpMethod.GET, "/api/draw/current", "/api/wheel/status").hasAnyRole("ADMIN", "PARTICIPANT")
                 .requestMatchers(HttpMethod.GET, "/api/auth/me").authenticated()

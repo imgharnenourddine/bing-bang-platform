@@ -1,6 +1,6 @@
 # Quiz domain foundation (F06.1)
 
-The Tech Lead owns the Quiz module, including backend, frontend, migrations, tests and integration, superseding earlier ownership instructions. Existing work by Mohammed must be preserved if discovered. F06.1 adds persistence; F06.2 adds administrative DRAFT preparation services and controllers. F06.3 implements lifecycle execution; answer admission, scoring/leaderboard services, messaging and UI remain unimplemented.
+The Tech Lead owns the Quiz module, including backend, frontend, migrations, tests and integration, superseding earlier ownership instructions. Existing work by Mohammed must be preserved if discovered. F06.1 adds persistence; F06.2 adds administrative DRAFT preparation services and controllers. F06.3 implements lifecycle execution; F06.4 implements answers and scoring, and F06.5 implements administrator rankings and personal results; complete messaging and UI remain unimplemented.
 
 ```mermaid
 erDiagram
@@ -24,7 +24,7 @@ These transitions are enforced by the F06.3 lifecycle service. V7 stores quiz, q
 
 V7 enforces unique question positions per session and option positions per question, positive positions/duration/points, nonblank text, one correct option **at most** via a partial unique index, one answer per participant/question, nonnegative awarded points and a composite FK ensuring the selected option belongs to the answered question. A partial unique index permits only one OPEN, QUESTION_ACTIVE or QUESTION_CLOSED session. Multiple drafts are allowed. Foreign keys use RESTRICT; history is not cascaded away. The schema does **not** enforce at least two options or the existence of a correct option: question finalization/publication must validate both and exactly one correct answer in a transaction. Prevent edits after launch in that service. Correct flags must never reach participant APIs while the question is open.
 
-Suggested MVP defaults are 30 seconds and 100 fixed points, not an implemented service policy. Accepted answers store a server-generated submission time and immutable awarded points. The backend must assign question points for correct answers and zero for incorrect ones; unanswered means zero. Repository sums cover participants with answers only. A future leaderboard must left-join the eligible participant population so zero-score participants are not lost; the precise participation policy remains open. Equal scores share rank; suggested competition ranks are 1, 2, 2, 4, with no speed tie-breaker.
+Suggested MVP defaults are 30 seconds and 100 fixed points, not an implemented service policy. Accepted answers store a server-generated submission time and immutable awarded points. The backend must assign question points for correct answers and zero for incorrect ones; unanswered means zero. Repository sums cover participants with answers only. The leaderboard left-joins eligible participants so zero-score participants are included; see QUIZ_RESULTS_AND_LEADERBOARD.md for eligibility. Equal scores share rank; suggested competition ranks are 1, 2, 2, 4, with no speed tie-breaker.
 
 For concurrency, lifecycle mutations lock the session row with `findByIdForUpdate` (pessimistic write). Answer transactions acquire the same session with `findByIdForAnswer` (pessimistic read/shared), check active question and database-authoritative deadline, then validate option and insert the answer in that transaction. PostgreSQL's unique and composite foreign keys are the final barrier. Shared session row locks permit concurrent answers while excluding a closing writer; do not take a global write lock per answer. Establish a consistent order: session row, question/option validation, answer insertion; lock additional resources only after the session. Simultaneous activation of separate drafts is finally constrained by the active-session partial index. The answer service translates duplicate conflicts into domain errors. Verify locking and clock semantics under actual PostgreSQL before production use.
 
@@ -40,3 +40,6 @@ V8 adds per-question timing and a persisted closing cutoff. The lifecycle servic
 
 
 F06.4 uses the existing answer uniqueness and composite option foreign key; it persists fixed awarded points and uses `quiz_question_timings.closed_at` for historical feedback. See [QUIZ_ANSWER_AND_SCORING.md](QUIZ_ANSWER_AND_SCORING.md).
+
+
+F06.5 derives finalized results from stored answers and question points; see [QUIZ_RESULTS_AND_LEADERBOARD.md](QUIZ_RESULTS_AND_LEADERBOARD.md) for late-answer eligibility and ranking.

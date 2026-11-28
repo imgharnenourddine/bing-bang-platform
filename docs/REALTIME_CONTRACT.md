@@ -93,3 +93,6 @@ Lifecycle state and deadlines are available over REST as documented in [QUIZ_LIF
 
 
 F06.4 does not publish answer events. Future answer-count notifications must be ADMIN-only and after commit; individual answers and early correctness must not be broadcast. REST remains authoritative.
+
+
+F06.5 results privacy: future shared participant quiz events must never carry leaderboard, ranks, scores, winner identities or distributions. Results are fetched via role-protected REST. F06.6 remains pending.

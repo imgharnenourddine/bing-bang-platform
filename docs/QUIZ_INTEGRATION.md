@@ -108,7 +108,7 @@ All payloads are JSON. Existing API validation uses RFC 9457 problem details (`d
 | Start/open/close/advance/finish quiz and retrieve admin results | `/api/admin/quiz/**`, ADMIN |
 | Retrieve current quiz and active question | `/api/quiz/**`, authenticated as appropriate |
 | Submit an answer; read own score | `/api/participants/me/quiz/**`, PARTICIPANT |
-| Retrieve final results and leaderboard | `/api/quiz/**`, explicitly authorize the intended audience |
+| Retrieve final results and leaderboard | `/api/admin/quiz/leaderboard` (ADMIN); `/api/quiz/me/results` (PARTICIPANT, own result only) |
 
 The administrative preparation endpoints are defined in API_CONTRACT.md; lifecycle endpoints and participant-safe status are described in QUIZ_LIFECYCLE.md; answer endpoints remain proposals. There are no mock Quiz endpoints; F06.2 defines administrator preparation request DTOs. `/quiz`, `/quiz/results`, `/admin/quiz`, `/admin/quiz/results` are proposed frontend routes; none are registered. The existing `BrowserRouter` is in `frontend/src/main.tsx`; coordinate route integration and visual approval before adding screens.
 
@@ -116,7 +116,7 @@ The administrative preparation endpoints are defined in API_CONTRACT.md; lifecyc
 
 The admin controls progression; connected clients synchronize the active question. Only the currently open question accepts an answer; enforce one submission per participant/question with a database uniqueness constraint and transaction-safe validation. Each question has a configured fixed point value: correct receives those points, incorrect zero. Validate correctness and compute scores on the backend. Do not expose correct answers while a question is open or another participant's private answer. Persist results in PostgreSQL and support shared ranking for ties. After reconnect, fetch authoritative state over REST.
 
-Question time limits and server deadline policy, editing after launch, tie-ranking convention (competition vs dense), question ordering, result visibility and recovery of missed submissions remain decisions for the team. Do not infer them from examples.
+Question deadlines, draft-only editing, competition ranks, administrator-only leaderboard, participant-only personal results and answer recovery follow the implemented contracts.
 
 ## 10. WebSocket and real-time events
 
@@ -132,7 +132,7 @@ public void openQuiz() {
 }
 ```
 
-Example current envelope payload: `{"type":"QUIZ_OPENED","payload":{"status":"OPEN"}}` (metadata fields omitted here). Rich question/leaderboard payloads are **proposed future contract changes**, not implemented; coordinate them with the Tech Lead and version them. Never send early correct answers or private submissions. `RealtimeEvents.quiz` requires a transaction and its F03 listener sends after commit; delivery is best-effort. Reconnect, restore subscriptions and fetch state through REST; deduplicate by event ID if appropriate. F03 uses one backend task with the in-memory simple broker.
+Example current envelope payload: `{"type":"QUIZ_OPENED","payload":{"status":"OPEN"}}` (metadata fields omitted here). Rich question payloads are proposed and require coordination and versioning. Never broadcast leaderboard payloads to participants. Never send early correct answers or private submissions. `RealtimeEvents.quiz` requires a transaction and its F03 listener sends after commit; delivery is best-effort. Reconnect, restore subscriptions and fetch state through REST; deduplicate by event ID if appropriate. F03 uses one backend task with the in-memory simple broker.
 
 ## 11. Shared frontend services
 
@@ -183,7 +183,7 @@ Quiz is done when it has persistent configuration, questions and options, admin-
 
 ## F06.1 domain foundation
 
-The Tech Lead owns Quiz. See [QUIZ_DOMAIN_MODEL.md](QUIZ_DOMAIN_MODEL.md) for V7, the four JPA entities, integrity and future locking requirements. Administrative preparation and lifecycle controllers are implemented; answer admission and results remain unimplemented. F06.1 PostgreSQL execution and JPA validation remain unverified until tested.
+The Tech Lead owns Quiz. See [QUIZ_DOMAIN_MODEL.md](QUIZ_DOMAIN_MODEL.md) for V7, the four JPA entities, integrity and future locking requirements. Administrative preparation, lifecycle, answer admission and results controllers are implemented. F06.1 PostgreSQL execution and JPA validation remain unverified until tested.
 
 ## F06.2 administrative preparation
 
@@ -194,4 +194,7 @@ See [API_CONTRACT.md](API_CONTRACT.md) for the implemented ADMIN-only quiz and q
 ADMIN lifecycle routes and the PARTICIPANT-only `/api/quiz/status` are implemented; see [QUIZ_LIFECYCLE.md](QUIZ_LIFECYCLE.md). The participant DTO exposes no correct-answer flags. Answer admission and fixed scoring are implemented in F06.4; Quiz event publication remains a future milestone. V8 stores closing cutoffs and per-question timings; migration and concurrency behavior remain unverified until tested against PostgreSQL.
 
 
-F06.4 implements authenticated participant answers, recovery and closed-question feedback, and ADMIN answer counts; see [QUIZ_ANSWER_AND_SCORING.md](QUIZ_ANSWER_AND_SCORING.md). Leaderboard and complete Quiz events remain future work.
+F06.4 implements authenticated participant answers, recovery and closed-question feedback, and ADMIN answer counts; see [QUIZ_ANSWER_AND_SCORING.md](QUIZ_ANSWER_AND_SCORING.md). F06.5 adds the administrator leaderboard and personal results; complete Quiz events remain future work.
+
+
+F06.5 final-result confidentiality: ADMIN alone receives leaderboard and ranks; PARTICIPANT receives only an unranked personal result. See [QUIZ_RESULTS_AND_LEADERBOARD.md](QUIZ_RESULTS_AND_LEADERBOARD.md). A07, A08, P05 and P06 remain pending.
