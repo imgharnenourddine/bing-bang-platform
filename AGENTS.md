@@ -38,4 +38,6 @@ A05 prize inventory and premium settings live at `/admin/prizes`; reuse the ADMI
 
 A06 participant management is the ADMIN-only, read-only `/admin/participants` page. It uses paginated participant APIs and the existing shared STOMP client; it must not create participant sessions or infer attendance. Live backend and browser validation remains required.
 
-F06.1 adds the Quiz persistence foundation and V7. See docs/QUIZ_DOMAIN_MODEL.md; no Quiz controllers, lifecycle services, results or UI are implemented. Validate PostgreSQL migration, JPA mappings and concurrency before deployment.
+F06.1 adds the Quiz persistence foundation and V7. See docs/QUIZ_DOMAIN_MODEL.md; administrative preparation endpoints are implemented; lifecycle services, participant APIs, results and UI remain unimplemented. Validate PostgreSQL migration, JPA mappings and concurrency before deployment.
+
+F06.2 provides ADMIN-only quiz preparation endpoints under `/api/admin/quiz`. All preparation mutations are DRAFT-only, take the quiz row lock and require the current aggregate version. Creation uses a PostgreSQL advisory transaction lock. F06.3 must independently revalidate readiness and use compatible locks. Live PostgreSQL, security and API verification remain required.

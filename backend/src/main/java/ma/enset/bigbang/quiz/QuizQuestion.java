@@ -23,6 +23,10 @@ public class QuizQuestion {
         this.questionText = QuizSession.requireText(text, 2000); this.position = position;
         this.durationSeconds = durationSeconds; this.points = points; this.createdAt = Objects.requireNonNull(now); this.updatedAt = now;
     }
+    void revise(String text, int duration, int score, Instant now) {
+        if (duration <= 0 || score <= 0) throw new IllegalArgumentException("Duration and points must be positive");
+        questionText = QuizSession.requireText(text, 2000); durationSeconds = duration; points = score; updatedAt = now;
+    }
     public UUID getId() { return id; }
     public QuizSession getQuizSession() { return quizSession; }
     public String getQuestionText() { return questionText; }

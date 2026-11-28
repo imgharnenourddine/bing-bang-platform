@@ -81,9 +81,9 @@ Every `/api/admin/prizes/**` and `/api/admin/wheel/**` route requires ADMIN; mut
 
 Award response fields are `awardId`, `drawId`, `participantId` (admin only), `participantNumber`, `prizeId`, `prizeName`, `prizeCategory`, `awardedBy`, `awardedAt` and admin snapshot details. Public responses omit the participant UUID and inventory/weight details. Segments are snapshotted in deterministic UUID order; display sectors are equal and must disclose the weighted selection. See [prize wheel](PRIZE_WHEEL.md).
 
-## Proposed Quiz namespace — not implemented
+## Quiz administrative preparation API (F06.2)
 
-Administrator operations are proposed under `/api/admin/quiz/**`; shared participant-facing reads under `/api/quiz/**`; a participant's answer and score operations under `/api/participants/me/quiz/**`. Exact routes, schemas and response codes remain for the Tech Lead to refine. The admin prefix is protected by existing security rules. The other proposed namespaces are currently **denied by default** and need explicitly reviewed security matchers before implementation. Resolve identity through `SessionPrincipal`, validate CSRF on mutations, return existing problem/security error formats, and never expose correct answers while a question is open. See [QUIZ_INTEGRATION.md](QUIZ_INTEGRATION.md).
+Administrative quiz preparation routes are implemented below; shared participant-facing reads under `/api/quiz/**` and participant answers and scores under `/api/participants/me/quiz/**` remain proposed. The admin prefix is protected by existing security rules. The other proposed namespaces are currently **denied by default** and need explicitly reviewed security matchers before implementation. Resolve identity through `SessionPrincipal`, validate CSRF on mutations, return existing problem/security error formats, and never expose correct answers while a question is open. See [QUIZ_INTEGRATION.md](QUIZ_INTEGRATION.md).
 
 ### P01 frontend integration
 
@@ -96,3 +96,21 @@ The registration page at `/` checks `GET /api/auth/me`. A participant is redirec
 ### A06 administrator participant view
 
 The read-only `/admin/participants` frontend uses the ADMIN endpoints `GET /api/admin/participants?page=...&size=...` and `GET /api/admin/participants/count`. The backend sorts by public participant number and limits page size to 100. The current participant response does not include registration time. The UI loads all pages sequentially for search and uses the dedicated count response for the total; it does not create or modify participants.
+
+### Implemented F06.2 endpoints
+
+All endpoints below require an ADMIN session; POST, PUT, PATCH and DELETE require the current CSRF token. Administrator question responses include correct option flags and must never be reused for participant responses.
+
+| Method | Path | Behavior |
+| --- | --- | --- |
+| POST | `/api/admin/quiz` | Create DRAFT quiz: `{ "title": "Event quiz" }`; 201 |
+| GET | `/api/admin/quiz` | Quiz ID, title, status, version, questionCount and timestamps |
+| PATCH | `/api/admin/quiz` | `{ "title": "New title", "expectedVersion": 0 }`; 200 |
+| GET, POST | `/api/admin/quiz/questions` | List or append question; POST returns 201 |
+| GET, PUT, DELETE | `/api/admin/quiz/questions/{questionId}` | Retrieve, replace or delete; DELETE requires `?expectedVersion=...`, returns 204 |
+| PUT | `/api/admin/quiz/questions/order` | `{ "questionIds": ["uuid", "uuid"], "expectedVersion": 1 }`; returns 204 |
+| GET | `/api/admin/quiz/readiness` | `{ "ready": false, "questionCount": 0, "issues": ["At least one question is required."] }` |
+
+Question POST and PUT accept `{ "text": "Question?", "durationSeconds": 30, "points": 100, "options": [{"text":"Yes","correct":true},{"text":"No","correct":false}], "expectedVersion": 0 }`. The duration and points default to 30 and 100 if omitted. Question responses include ID, text, position, durationSeconds, points, ordered options with ID/text/position/correct, timestamps and `quizVersion`. Get a fresh version from GET before each mutation; every successful mutation updates the aggregate version. A stale version gives 409 `STALE_QUIZ_VERSION`. Quiz and question text are limited to 200 and 2000 characters, option text to 1000; 2–10 options are required, exactly one correct and no duplicate after trimming and case folding. Positions are server-assigned; reorder requires the complete set, and deletion compacts positions.
+
+Invalid requests return 400, unauthenticated access 401, forbidden role or CSRF 403, missing resources 404, and duplicate quiz, non-DRAFT mutation, stale versions or integrity conflicts 409. Domain problem details include a stable `code` where provided. Concurrent quiz creation takes a PostgreSQL transaction advisory lock; other mutations lock the session row before updating questions. Lifecycle execution, participant questions, answers, scoring, results and Quiz events remain unimplemented.

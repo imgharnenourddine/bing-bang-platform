@@ -4,7 +4,7 @@
 
 THE BIG BANG is a modular monolith for the ENSET event. The Tech Lead owns the Quiz backend, frontend feature, Quiz migrations, tests and Quiz-specific documentation; preserve any work previously produced by Mohammed. The Tech Lead owns authentication, participant identity, real-time infrastructure, draw, wheel, shared frontend services, general participant/admin shells, deployment and cross-module integration. Coordinate changes to `SecurityConfig.java`, WebSocket configuration, shared event types, `pom.xml`, `frontend/package.json`, `frontend/package-lock.json`, `frontend/src/main.tsx` routing, shared tokens, Compose, CI and `AGENTS.md`.
 
-Use the existing Spring Boot application, React app and PostgreSQL database. Do not add a second backend, frontend, identity table, authentication system, JWT or broker. The package boundary is `backend/src/main/java/ma/enset/bigbang/quiz/`; organize controllers, services, repositories, entities, DTOs, exceptions and events as needed. The frontend boundary is `frontend/src/features/quiz/`. F06.1 adds Quiz entities and V7 SQL; there are no Quiz screens, controllers or lifecycle services yet.
+Use the existing Spring Boot application, React app and PostgreSQL database. Do not add a second backend, frontend, identity table, authentication system, JWT or broker. The package boundary is `backend/src/main/java/ma/enset/bigbang/quiz/`; organize controllers, services, repositories, entities, DTOs, exceptions and events as needed. The frontend boundary is `frontend/src/features/quiz/`. F06.1 adds Quiz entities and V7 SQL; ADMIN preparation controllers and services are implemented; Quiz screens and lifecycle services remain pending.
 
 ## 2. Prerequisites and Git
 
@@ -98,7 +98,7 @@ Inject `ParticipantService`; `findById(UUID)` returns the shared `ParticipantRes
 
 V1–V6 already exist. F06.1 adds `V7__quiz_foundation.sql`; reserve **V8 through V19** for further Quiz migrations if needed. Do not add empty migrations. Reserve versions before writing them and coordinate all parallel changes with the Tech Lead; V20+ can be reserved for other work after agreement. Flyway ordering matters: applying a higher version before a pending lower Quiz migration can cause the lower migration to be ignored or validation to fail under the current default ordering. Coordinate merge **and deployment order**; do not silently enable out-of-order migrations. Never modify already-applied SQL. F06.0 created no Quiz migration; F06.1 adds V7.
 
-## 8. Proposed REST conventions — not implemented
+## 8. REST conventions — preparation implemented
 
 All payloads are JSON. Existing API validation uses RFC 9457 problem details (`detail`, sometimes `code`); security failures can use `{status,error}`. Explicitly authorize each route and enforce ADMIN/PARTICIPANT on the server. Quiz commands use REST; WebSocket is not authoritative.
 
@@ -110,7 +110,7 @@ All payloads are JSON. Existing API validation uses RFC 9457 problem details (`d
 | Submit an answer; read own score | `/api/participants/me/quiz/**`, PARTICIPANT |
 | Retrieve final results and leaderboard | `/api/quiz/**`, explicitly authorize the intended audience |
 
-Exact endpoint names, HTTP methods, payloads and response codes remain proposals for the Tech Lead to refine. There are no mock Quiz endpoints or pre-approved question models. `/quiz`, `/quiz/results`, `/admin/quiz`, `/admin/quiz/results` are proposed frontend routes; none are registered. The existing `BrowserRouter` is in `frontend/src/main.tsx`; coordinate route integration and visual approval before adding screens.
+The administrative preparation endpoints are defined in API_CONTRACT.md; participant and lifecycle endpoint names remain proposals. There are no mock Quiz endpoints; F06.2 defines administrator preparation request DTOs. `/quiz`, `/quiz/results`, `/admin/quiz`, `/admin/quiz/results` are proposed frontend routes; none are registered. The existing `BrowserRouter` is in `frontend/src/main.tsx`; coordinate route integration and visual approval before adding screens.
 
 ## 9. Quiz behavior and open decisions
 
@@ -184,3 +184,7 @@ Quiz is done when it has persistent configuration, questions and options, admin-
 ## F06.1 domain foundation
 
 The Tech Lead owns Quiz. See [QUIZ_DOMAIN_MODEL.md](QUIZ_DOMAIN_MODEL.md) for V7, the four JPA entities, integrity and future locking requirements. Controllers, lifecycle, answer admission and results remain unimplemented. F06.1 PostgreSQL execution and JPA validation remain unverified until tested.
+
+## F06.2 administrative preparation
+
+See [API_CONTRACT.md](API_CONTRACT.md) for the implemented ADMIN-only quiz and question routes, required aggregate versions and option validation. Question management is DRAFT-only and transactional. Readiness does not launch a quiz; the future lifecycle service must revalidate readiness inside its start transaction. Participant-facing endpoints and Quiz event publication remain proposed. Runtime verification against PostgreSQL is outstanding.

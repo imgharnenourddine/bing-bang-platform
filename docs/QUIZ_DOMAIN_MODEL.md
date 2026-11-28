@@ -1,6 +1,6 @@
 # Quiz domain foundation (F06.1)
 
-The Tech Lead owns the Quiz module, including backend, frontend, migrations, tests and integration, superseding earlier ownership instructions. Existing work by Mohammed must be preserved if discovered. This milestone adds persistence only: no lifecycle service, controllers, answer admission, scoring/leaderboard service, messaging or UI is implemented.
+The Tech Lead owns the Quiz module, including backend, frontend, migrations, tests and integration, superseding earlier ownership instructions. Existing work by Mohammed must be preserved if discovered. F06.1 adds persistence; F06.2 adds administrative DRAFT preparation services and controllers. Lifecycle execution, answer admission, scoring/leaderboard services, messaging and UI remain unimplemented.
 
 ```mermaid
 erDiagram
@@ -29,3 +29,7 @@ Suggested MVP defaults are 30 seconds and 100 fixed points, not an implemented s
 For future concurrency, lifecycle mutations lock the session row with `findByIdForUpdate` (pessimistic write). Answer transactions acquire the same session with `findByIdForAnswer` (pessimistic read/shared), check active question and database-authoritative deadline, then validate option and insert the answer in that transaction. PostgreSQL's unique and composite foreign keys are the final barrier. Shared session row locks permit concurrent answers while excluding a closing writer; do not take a global write lock per answer. Establish a consistent order: session row, question/option validation, answer insertion; lock additional resources only after the session. Simultaneous activation of separate drafts is finally constrained by the active-session partial index. Translate resulting conflicts into domain errors in the future service. Verify locking and clock semantics under actual PostgreSQL before production use.
 
 Tests include constructor unit tests and opt-in PostgreSQL constraints and JPA repository tests using isolated schemas (`F06_TEST_DB_URL`, `F06_TEST_DB_USER`, `F06_TEST_DB_PASSWORD`). V7 remains owned by standalone Flyway; tests run SQL in temporary schemas but do not themselves validate Flyway. V8–V19 remain reserved for coordinated Quiz migrations. Do not assume migration, Hibernate validation or integration tests have passed until executed against PostgreSQL.
+
+## F06.2 preparation services
+
+Quiz creation serializes through a PostgreSQL advisory transaction lock. Question, title, delete and reorder operations lock the quiz row first, reject non-DRAFT status and compare the supplied aggregate version. Mutations update the version, options are replaced atomically, and reorder uses two positive-position passes to avoid transient uniqueness violations. F06.3 must acquire the same session row write lock and revalidate readiness before starting. Admin API constraints and request examples are in [API_CONTRACT.md](API_CONTRACT.md). Database integration and locking have not yet been validated in this environment.

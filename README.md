@@ -306,7 +306,7 @@ Admins configure STANDARD/PREMIUM prizes, weights, stock and progression, then s
 
 ## Quiz developer onboarding
 
-The Tech Lead owns Quiz. F06.1 adds the domain and V7 schema; Quiz lifecycle services, APIs and screens are not yet implemented. Follow [Quiz integration and developer setup](docs/QUIZ_INTEGRATION.md) for both Compose workflows, Git steps, shared identity and STOMP services, proposed routes, migration reservations and test expectations. V7–V19 are reserved for Quiz; coordinate deployment order. The optional `compose.local.yaml` exposes PostgreSQL on localhost only for running Spring Boot outside Docker.
+The Tech Lead owns Quiz. F06.1 adds the domain and V7 schema; administrative preparation APIs are implemented; lifecycle services, participant APIs and screens are not yet implemented. Follow [Quiz integration and developer setup](docs/QUIZ_INTEGRATION.md) for both Compose workflows, Git steps, shared identity and STOMP services, proposed routes, migration reservations and test expectations. V7–V19 are reserved for Quiz; coordinate deployment order. The optional `compose.local.yaml` exposes PostgreSQL on localhost only for running Spring Boot outside Docker.
 
 ### Participant registration (P01)
 
@@ -361,3 +361,7 @@ For local verification, start the backend and database, run `cd frontend && npm 
 ### Quiz foundation (F06.1)
 
 `V7__quiz_foundation.sql` and JPA entities provide Quiz session, ordered questions and options, and participant answers. Database constraints prevent duplicate answers and invalid option/question references; future transactional services must enforce publication validity, deadlines, lifecycle and scoring. See [Quiz domain model](docs/QUIZ_DOMAIN_MODEL.md). PostgreSQL migration and JPA integration remain unverified in the restricted environment.
+
+### Quiz preparation API (F06.2)
+
+Administrators can create one DRAFT event quiz, edit its title and manage ordered questions and answer options using `/api/admin/quiz`. Each question has 2–10 unique options and exactly one correct option. Mutations require the current quiz `expectedVersion` and CSRF. The readiness endpoint checks preparation without launching the quiz. PostgreSQL-backed transaction locks protect creation and question mutations; see [API contracts](docs/API_CONTRACT.md). Lifecycle, participant answers and results remain future work. Maven, PostgreSQL and live API verification remain outstanding in the restricted environment.
