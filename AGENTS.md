@@ -46,3 +46,6 @@ F06.3 adds Quiz lifecycle and V8 timing history. Use the same session-row lock a
 
 
 F06.4 implements participant answer submission and fixed scoring. Preserve shared/read answer locks versus exclusive lifecycle locks, existing-answer idempotency, and closed-question feedback confidentiality; see docs/QUIZ_ANSWER_AND_SCORING.md. PostgreSQL and HTTP integration still require verification.
+
+
+F06.5 results are available only after quiz completion. The leaderboard and ranks are ADMIN-only; participants may retrieve only their own unranked result. Preserve eligibility and fixed-score semantics in docs/QUIZ_RESULTS_AND_LEADERBOARD.md.

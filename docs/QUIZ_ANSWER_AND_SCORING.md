@@ -25,8 +25,11 @@ sequenceDiagram
 
 The transaction refreshes the quiz under a pessimistic read lock, then reads server `Clock` time; new submissions require time strictly before the stored deadline. Lifecycle mutations take the conflicting exclusive lock, so a manual or scheduled close cannot pass an admitted transaction. The unique constraint and `INSERT ... ON CONFLICT DO NOTHING` resolve simultaneous duplicates without continuing in an aborted transaction. The server stores configured question points for a correct answer and zero for an incorrect answer. No answer row contributes zero. Stored awards are historical snapshots. Database locking and simultaneous request behavior still require verification against PostgreSQL in the target environment.
 
-No per-answer WebSocket event is published in this milestone. Future F06.6 events must be after commit and must not broadcast answers or early correctness. Leaderboard and final results remain pending. Unit, PostgreSQL and HTTP/security test sources are provided; execution depends on the local Maven and PostgreSQL environment.
+No per-answer WebSocket event is published in this milestone. Future F06.6 events must be after commit and must not broadcast answers or early correctness. The administrator leaderboard and participant personal results are implemented in F06.5. Unit, PostgreSQL and HTTP/security test sources are provided; execution depends on the local Maven and PostgreSQL environment.
 
 ## Local verification
 
 Run `cd backend && ./mvnw clean verify`. `PostgresQuizAnswerTest` is enabled only when `F06_TEST_DB_URL`, `F06_TEST_DB_USER` and `F06_TEST_DB_PASSWORD` point to a disposable PostgreSQL test database whose user can create and drop its isolated test schema. Run `git diff --check` and `docker compose config --quiet` from the repository root. Exercise the endpoints with separate authenticated participant and administrator sessions and CSRF tokens once the backend is running; never use a production database for race tests.
+
+
+F06.5 aggregates immutable awards for administrator rankings and unranked personal results; see [QUIZ_RESULTS_AND_LEADERBOARD.md](QUIZ_RESULTS_AND_LEADERBOARD.md).
