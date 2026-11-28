@@ -16,13 +16,16 @@ public class QuizAdminService {
     public QuizAdminService(QuizSessionRepository sessions,QuizQuestionRepository questions,QuizOptionRepository options,JdbcTemplate jdbc,EntityManager em) {
         this.sessions=sessions;this.questions=questions;this.options=options;this.jdbc=jdbc;this.em=em;
     }
+    private ma.enset.bigbang.notification.RealtimeEvents realtime;
+    @org.springframework.beans.factory.annotation.Autowired(required=false) void setRealtime(ma.enset.bigbang.notification.RealtimeEvents realtime){this.realtime=realtime;}
+    private void emit(QuizSession q){if(realtime!=null)realtime.quizAdmin(ma.enset.bigbang.notification.EventType.QUIZ_CONFIGURATION_UPDATED,new ma.enset.bigbang.notification.RealtimePayload.QuizInvalidation(q.getId(),null,q.getVersion()));}
     private QuizAdminException error(HttpStatus s,String code,String msg){return new QuizAdminException(s,code,msg);}
     private QuizSession onlySession(){var all=sessions.findAll();if(all.isEmpty())throw error(HttpStatus.NOT_FOUND,"QUIZ_NOT_FOUND","Quiz has not been created.");if(all.size()!=1)throw error(HttpStatus.CONFLICT,"AMBIGUOUS_QUIZ","Multiple quiz sessions require administrative reconciliation.");return all.get(0);}
     private QuizSession locked(Long version){var q=sessions.findByIdForUpdate(onlySession().getId()).orElseThrow(()->error(HttpStatus.NOT_FOUND,"QUIZ_NOT_FOUND","Quiz not found."));
         em.refresh(q,jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
         if(q.getStatus()!=QuizStatus.DRAFT)throw error(HttpStatus.CONFLICT,"QUIZ_NOT_DRAFT","Quiz preparation is closed.");
         if(version==null||q.getVersion()!=version)throw error(HttpStatus.CONFLICT,"STALE_QUIZ_VERSION","Quiz was changed; reload before editing.");return q;}
-    private void touch(QuizSession q){q.touch(Instant.now());sessions.saveAndFlush(q);}
+    private void touch(QuizSession q){q.touch(Instant.now());sessions.saveAndFlush(q);emit(q);}
     private QuizAdminDtos.Quiz view(QuizSession q){return new QuizAdminDtos.Quiz(q.getId(),q.getTitle(),q.getStatus(),q.getVersion(),questions.countByQuizSessionId(q.getId()),q.getCreatedAt(),q.getUpdatedAt());}
     private QuizQuestion question(QuizSession quiz,UUID id){return questions.findByIdAndQuizSessionId(id,quiz.getId()).orElseThrow(()->error(HttpStatus.NOT_FOUND,"QUESTION_NOT_FOUND","Question not found."));}
     private QuizAdminDtos.Question questionView(QuizQuestion q,List<QuizOption> values,long version){return new QuizAdminDtos.Question(q.getId(),q.getQuestionText(),q.getPosition(),q.getDurationSeconds(),q.getPoints(),values.stream().map(o->new QuizAdminDtos.Option(o.getId(),o.getOptionText(),o.getPosition(),o.isCorrect())).toList(),q.getCreatedAt(),q.getUpdatedAt(),version);}
@@ -38,7 +41,7 @@ public class QuizAdminService {
     @Transactional public QuizAdminDtos.Quiz create(QuizAdminDtos.CreateQuiz input){
         if(input==null||input.title()==null||input.title().isBlank()||input.title().strip().length()>200)throw error(HttpStatus.BAD_REQUEST,"INVALID_QUIZ","A title of at most 200 characters is required.");
         jdbc.queryForList("SELECT pg_advisory_xact_lock(?)", 612047221L);if(!sessions.findAll().isEmpty())throw error(HttpStatus.CONFLICT,"QUIZ_EXISTS","An event quiz already exists.");
-        return view(sessions.saveAndFlush(new QuizSession(UUID.randomUUID(),input.title(),Instant.now())));
+        var created=sessions.saveAndFlush(new QuizSession(UUID.randomUUID(),input.title(),Instant.now()));emit(created);return view(created);
     }
     @Transactional(readOnly=true) public QuizAdminDtos.Quiz get(){return view(onlySession());}
     @Transactional public QuizAdminDtos.Quiz update(QuizAdminDtos.UpdateQuiz input){var q=locked(input.expectedVersion());q.rename(input.title(),Instant.now());touch(q);return view(q);}

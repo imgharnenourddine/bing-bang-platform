@@ -15,10 +15,13 @@ The administrator list sorts score descending and public number ascending for de
 
 PostgreSQL computes participant aggregates in one grouped query, with a bounded separate question totals query. Personal requests use the same aggregation scoped to the authenticated UUID and do not build the leaderboard. The read-only repeatable-read transaction gives each response a consistent snapshot. No migration or new index is required by this implementation; performance and the SQL need verification on PostgreSQL.
 
-Future F06.6 notifications must not disclose ranks, scores, winner identities or answer distributions to participant destinations. Participants use their personal REST endpoint; administrators use their protected leaderboard endpoint. No Quiz results events are published by this milestone.
+Future F06.6 notifications must not disclose ranks, scores, winner identities or answer distributions to participant destinations. Participants use their personal REST endpoint; administrators use their protected leaderboard endpoint. F06.6 publishes a non-sensitive lifecycle completion event; results remain available through REST.
 
 Frontend roadmap: A07 administrator quiz management; A08 administrator leaderboard; P05 participant quiz; P06 participant personal results. These interfaces are pending.
 
 ## Verification
 
 Run `cd backend && ./mvnw clean verify`. `PostgresQuizResultsTest` requires `F06_TEST_DB_URL`, `F06_TEST_DB_USER`, and `F06_TEST_DB_PASSWORD` for a disposable PostgreSQL database where the user can create and drop its test schema. It exercises the persisted score and late-registration policy with over 100 participants. Run `git diff --check` and `docker compose config --quiet` at the repository root. Live authenticated HTTP and concurrent/database checks require a running backend and PostgreSQL; their success must not be inferred from unit tests.
+
+
+F06.6 sends a non-sensitive FINISHED event; clients fetch personal results or the protected administrator leaderboard through REST.

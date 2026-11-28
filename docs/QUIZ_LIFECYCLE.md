@@ -29,10 +29,13 @@ V8 adds `question_closed_at` and `quiz_question_timings` so each opened question
 
 Question editing and lifecycle transitions lock the same session row; the F06.2 lock path now refreshes the managed entity after locking to avoid stale first-level cache state. The F06.4 answer transaction takes a shared lock (`findByIdForAnswer`), re-reads the active question and persisted deadline after acquiring the lock, uses a trusted server acceptance time **strictly before** the deadline, and inserts under the existing uniqueness constraint before releasing the lock. A concurrent exclusive closing transition must wait for admitted answer transactions. Align clocks on all application instances and verify the database/clock boundary in integration tests. Clock is injected for deterministic tests; it is server time, not a client-provided timestamp.
 
-Participant answer submission and fixed scoring are implemented in F06.4; administrator leaderboard and personal results are implemented in F06.5; complete Quiz STOMP publication remains pending. F06.6 must publish non-sensitive lifecycle events only after commit. The scheduler and REST transitions do not currently publish Quiz events. Maven, V8 execution, Hibernate schema validation, PostgreSQL races, restart recovery and live HTTP/security behavior remain unverified until run in an integration environment.
+Participant answer submission and fixed scoring are implemented in F06.4; administrator leaderboard and personal results are implemented in F06.5; F06.6 publishes non-sensitive lifecycle events after commit for both scheduler and REST transitions. Maven, V8 execution, Hibernate schema validation, PostgreSQL races, restart recovery and live HTTP/security behavior remain unverified until run in an integration environment.
 
 
 F06.4 answer and feedback endpoints use the existing lifecycle timing records and role boundaries. See [QUIZ_ANSWER_AND_SCORING.md](QUIZ_ANSWER_AND_SCORING.md).
 
 
 F06.5 exposes final results only after FINISHED. See [QUIZ_RESULTS_AND_LEADERBOARD.md](QUIZ_RESULTS_AND_LEADERBOARD.md).
+
+
+F06.6 publishes committed lifecycle invalidations including persisted revisions and deadlines, including scheduler closures. See [QUIZ_REALTIME_SYNCHRONIZATION.md](QUIZ_REALTIME_SYNCHRONIZATION.md).

@@ -77,6 +77,16 @@ public class RealtimeEvents {
         submit(Target.QUIZ, null, type, payload);
     }
     @Transactional(propagation = Propagation.MANDATORY)
+    public void quizLifecycle(EventType type, RealtimePayload.QuizLifecycle payload) {
+        require(type, EnumSet.of(EventType.QUIZ_OPENED, EventType.QUESTION_OPENED, EventType.QUESTION_CLOSED, EventType.QUIZ_FINISHED));
+        submit(Target.QUIZ, null, type, payload);
+    }
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void quizAdmin(EventType type, RealtimePayload.QuizInvalidation payload) {
+        require(type, EnumSet.of(EventType.QUIZ_ANSWER_COUNT_UPDATED, EventType.QUIZ_CONFIGURATION_UPDATED));
+        submit(Target.ADMIN, null, type, payload);
+    }
+    @Transactional(propagation = Propagation.MANDATORY)
     public void privateParticipant(UUID id, EventType type, RealtimePayload.PrivateNotification payload) {
         require(type, EnumSet.of(EventType.PARTICIPANT_SELECTED, EventType.PRIZE_WON));
         Objects.requireNonNull(id);

@@ -16,6 +16,8 @@ public sealed interface RealtimePayload {
     record WheelAvailability(java.util.List<ma.enset.bigbang.wheel.WheelDtos.PublicSegment> eligiblePrizes) implements RealtimePayload { }
     record WheelAdmin(UUID awardId, UUID drawId, UUID participantId, UUID prizeId, String prizeName, int remainingStock) implements RealtimePayload { }
     record PrizeWon(UUID awardId, UUID drawId, UUID prizeId, String prizeName, String message) implements RealtimePayload { }
+    record QuizLifecycle(UUID quizId, String status, UUID questionId, Integer questionPosition, long totalQuestions, java.time.Instant quizOpenedAt, java.time.Instant openedAt, java.time.Instant deadline, java.time.Instant closedAt, java.time.Instant finishedAt, long lifecycleVersion) implements RealtimePayload { }
+    record QuizInvalidation(UUID quizId, UUID questionId, long lifecycleVersion) implements RealtimePayload { }
     record QuizState(String status) implements RealtimePayload { }
     record PrivateNotification(String message) implements RealtimePayload { }
 }
