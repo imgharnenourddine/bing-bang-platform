@@ -86,3 +86,7 @@ After successful allocation, `/topic/wheel` receives `WHEEL_STARTED`, `WHEEL_RES
 ## Participant home integration
 
 P02 uses the existing shared STOMP service for `/user/queue/notifications` and `/topic/draw`. It deduplicates event IDs, reads current draw eligibility from REST after relevant events and reconnects, and checks the participant's own award history to recover a missed prize notice. While the page is visible, draw state is also polled every 30 seconds. The service retains its bounded reconnect policy and restores subscriptions; no event replay is assumed. Quiz, P03 and P04 interfaces remain future work. Live end-to-end behavior still requires verification with the running backend.
+
+## F06.3 lifecycle boundary
+
+Lifecycle state and deadlines are available over REST as documented in [QUIZ_LIFECYCLE.md](QUIZ_LIFECYCLE.md). F06.3 does not publish Quiz lifecycle events; future F06.6 integration must publish only after commit and omit correct answers and private submissions.

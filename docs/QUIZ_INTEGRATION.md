@@ -78,7 +78,7 @@ Open `http://localhost:5173/`. `frontend/vite.config.ts` proxies `/api` to `http
 
 ## 6. Shared backend identity and participant data
 
-Authenticated HTTP controllers can use Spring Security's actual `SessionPrincipal`. New quiz routes need explicit security matchers in `SecurityConfig`: `/api/admin/**` is already ADMIN-only; `/api/quiz/**` and `/api/participants/me/quiz/**` currently match `denyAll`. Coordinate the minimal matcher changes with the Tech Lead. CSRF applies to mutations. Never trust an identity from a body, URL or STOMP header as proof of identity.
+Authenticated HTTP controllers can use Spring Security's actual `SessionPrincipal`. New quiz routes need explicit security matchers in `SecurityConfig`: `/api/admin/**` is already ADMIN-only; `GET /api/quiz/status` is PARTICIPANT-only; other `/api/quiz/**` and `/api/participants/me/quiz/**` routes match `denyAll`. Coordinate the minimal matcher changes with the Tech Lead. CSRF applies to mutations. Never trust an identity from a body, URL or STOMP header as proof of identity.
 
 ```java
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -96,7 +96,7 @@ Inject `ParticipantService`; `findById(UUID)` returns the shared `ParticipantRes
 
 ## 7. Flyway ownership
 
-V1–V6 already exist. F06.1 adds `V7__quiz_foundation.sql`; reserve **V8 through V19** for further Quiz migrations if needed. Do not add empty migrations. Reserve versions before writing them and coordinate all parallel changes with the Tech Lead; V20+ can be reserved for other work after agreement. Flyway ordering matters: applying a higher version before a pending lower Quiz migration can cause the lower migration to be ignored or validation to fail under the current default ordering. Coordinate merge **and deployment order**; do not silently enable out-of-order migrations. Never modify already-applied SQL. F06.0 created no Quiz migration; F06.1 adds V7.
+V1–V6 already exist. F06.1 adds `V7__quiz_foundation.sql`; V8 adds question timing; reserve **V9 through V19** for further Quiz migrations if needed. Do not add empty migrations. Reserve versions before writing them and coordinate all parallel changes with the Tech Lead; V20+ can be reserved for other work after agreement. Flyway ordering matters: applying a higher version before a pending lower Quiz migration can cause the lower migration to be ignored or validation to fail under the current default ordering. Coordinate merge **and deployment order**; do not silently enable out-of-order migrations. Never modify already-applied SQL. F06.0 created no Quiz migration; F06.1 adds V7.
 
 ## 8. REST conventions — preparation implemented
 
@@ -110,7 +110,7 @@ All payloads are JSON. Existing API validation uses RFC 9457 problem details (`d
 | Submit an answer; read own score | `/api/participants/me/quiz/**`, PARTICIPANT |
 | Retrieve final results and leaderboard | `/api/quiz/**`, explicitly authorize the intended audience |
 
-The administrative preparation endpoints are defined in API_CONTRACT.md; participant and lifecycle endpoint names remain proposals. There are no mock Quiz endpoints; F06.2 defines administrator preparation request DTOs. `/quiz`, `/quiz/results`, `/admin/quiz`, `/admin/quiz/results` are proposed frontend routes; none are registered. The existing `BrowserRouter` is in `frontend/src/main.tsx`; coordinate route integration and visual approval before adding screens.
+The administrative preparation endpoints are defined in API_CONTRACT.md; lifecycle endpoints and participant-safe status are described in QUIZ_LIFECYCLE.md; answer endpoints remain proposals. There are no mock Quiz endpoints; F06.2 defines administrator preparation request DTOs. `/quiz`, `/quiz/results`, `/admin/quiz`, `/admin/quiz/results` are proposed frontend routes; none are registered. The existing `BrowserRouter` is in `frontend/src/main.tsx`; coordinate route integration and visual approval before adding screens.
 
 ## 9. Quiz behavior and open decisions
 
@@ -183,8 +183,12 @@ Quiz is done when it has persistent configuration, questions and options, admin-
 
 ## F06.1 domain foundation
 
-The Tech Lead owns Quiz. See [QUIZ_DOMAIN_MODEL.md](QUIZ_DOMAIN_MODEL.md) for V7, the four JPA entities, integrity and future locking requirements. Controllers, lifecycle, answer admission and results remain unimplemented. F06.1 PostgreSQL execution and JPA validation remain unverified until tested.
+The Tech Lead owns Quiz. See [QUIZ_DOMAIN_MODEL.md](QUIZ_DOMAIN_MODEL.md) for V7, the four JPA entities, integrity and future locking requirements. Administrative preparation and lifecycle controllers are implemented; answer admission and results remain unimplemented. F06.1 PostgreSQL execution and JPA validation remain unverified until tested.
 
 ## F06.2 administrative preparation
 
-See [API_CONTRACT.md](API_CONTRACT.md) for the implemented ADMIN-only quiz and question routes, required aggregate versions and option validation. Question management is DRAFT-only and transactional. Readiness does not launch a quiz; the future lifecycle service must revalidate readiness inside its start transaction. Participant-facing endpoints and Quiz event publication remain proposed. Runtime verification against PostgreSQL is outstanding.
+See [API_CONTRACT.md](API_CONTRACT.md) for the implemented ADMIN-only quiz and question routes, required aggregate versions and option validation. Question management is DRAFT-only and transactional. Readiness does not launch a quiz; the lifecycle start revalidates readiness in its transaction. Participant-safe status is implemented; answer endpoints and Quiz event publication remain proposed. Runtime verification against PostgreSQL is outstanding.
+
+## F06.3 lifecycle
+
+ADMIN lifecycle routes and the PARTICIPANT-only `/api/quiz/status` are implemented; see [QUIZ_LIFECYCLE.md](QUIZ_LIFECYCLE.md). The participant DTO exposes no correct-answer flags. Answer admission, scoring and Quiz event publication remain future milestones. V8 stores closing cutoffs and per-question timings; migration and concurrency behavior remain unverified until tested against PostgreSQL.

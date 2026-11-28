@@ -306,7 +306,7 @@ Admins configure STANDARD/PREMIUM prizes, weights, stock and progression, then s
 
 ## Quiz developer onboarding
 
-The Tech Lead owns Quiz. F06.1 adds the domain and V7 schema; administrative preparation APIs are implemented; lifecycle services, participant APIs and screens are not yet implemented. Follow [Quiz integration and developer setup](docs/QUIZ_INTEGRATION.md) for both Compose workflows, Git steps, shared identity and STOMP services, proposed routes, migration reservations and test expectations. V7–V19 are reserved for Quiz; coordinate deployment order. The optional `compose.local.yaml` exposes PostgreSQL on localhost only for running Spring Boot outside Docker.
+The Tech Lead owns Quiz. F06.1 adds the domain and V7 schema; administrative preparation and lifecycle APIs plus participant-safe status are implemented; answer APIs and screens are not yet implemented. Follow [Quiz integration and developer setup](docs/QUIZ_INTEGRATION.md) for both Compose workflows, Git steps, shared identity and STOMP services, proposed routes, migration reservations and test expectations. V7–V19 are reserved for Quiz; coordinate deployment order. The optional `compose.local.yaml` exposes PostgreSQL on localhost only for running Spring Boot outside Docker.
 
 ### Participant registration (P01)
 
@@ -365,3 +365,7 @@ For local verification, start the backend and database, run `cd frontend && npm 
 ### Quiz preparation API (F06.2)
 
 Administrators can create one DRAFT event quiz, edit its title and manage ordered questions and answer options using `/api/admin/quiz`. Each question has 2–10 unique options and exactly one correct option. Mutations require the current quiz `expectedVersion` and CSRF. The readiness endpoint checks preparation without launching the quiz. PostgreSQL-backed transaction locks protect creation and question mutations; see [API contracts](docs/API_CONTRACT.md). Lifecycle, participant answers and results remain future work. Maven, PostgreSQL and live API verification remain outstanding in the restricted environment.
+
+### Quiz lifecycle (F06.3)
+
+The ADMIN Quiz lifecycle opens and closes ordered questions using persisted server deadlines and a shared expiry scheduler; `/api/quiz/status` returns participant-safe current state. V8 retains per-question timing. See [Quiz lifecycle](docs/QUIZ_LIFECYCLE.md) for endpoints, locking and restart behavior. Answers, scoring, results and Quiz event publication remain future work. PostgreSQL migration and runtime integration are not yet verified.

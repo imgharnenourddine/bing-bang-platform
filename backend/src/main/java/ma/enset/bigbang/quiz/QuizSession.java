@@ -14,6 +14,7 @@ public class QuizSession {
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "current_question_id") private QuizQuestion currentQuestion;
     @Column(name = "question_opened_at") private Instant questionOpenedAt;
     @Column(name = "question_deadline") private Instant questionDeadline;
+    @Column(name = "question_closed_at") private Instant questionClosedAt;
     @Column(name = "opened_at") private Instant openedAt;
     @Column(name = "completed_at") private Instant completedAt;
     @Column(name = "created_at", nullable = false, updatable = false) private Instant createdAt;
@@ -30,6 +31,11 @@ public class QuizSession {
     }
     void rename(String value, Instant now) { title = requireText(value, 200); updatedAt = now; }
     void touch(Instant now) { updatedAt = now.isAfter(updatedAt) ? now : updatedAt.plusNanos(1); }
+    void start(Instant now) { status=QuizStatus.OPEN; openedAt=now; touch(now); }
+    void openQuestion(QuizQuestion question, Instant now) { currentQuestion=question; questionOpenedAt=now; questionDeadline=now.plusSeconds(question.getDurationSeconds()); questionClosedAt=null; status=QuizStatus.QUESTION_ACTIVE; touch(now); }
+    void closeQuestion(Instant now) { questionClosedAt=now.isAfter(questionDeadline)?questionDeadline:now; status=QuizStatus.QUESTION_CLOSED; touch(now); }
+    void finish(Instant now) { status=QuizStatus.FINISHED; completedAt=now; touch(now); }
+    public Instant getQuestionClosedAt() { return questionClosedAt; }
     public UUID getId() { return id; }
     public String getTitle() { return title; }
     public QuizStatus getStatus() { return status; }
