@@ -52,3 +52,6 @@ F06.5 results are available only after quiz completion. The leaderboard and rank
 
 
 F06.6 uses after-commit Quiz lifecycle events and administrator-only invalidations. REST remains authoritative; the broker is single-instance. See docs/QUIZ_REALTIME_SYNCHRONIZATION.md.
+
+
+A07 administrator Quiz management is at `/admin/quiz`, protected by the ADMIN guard. It uses shared layout, versioned Quiz REST mutations and shared STOMP reconciliation. A08, P05 and P06 remain pending; see docs/QUIZ_INTEGRATION.md.

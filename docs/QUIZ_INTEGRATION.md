@@ -201,3 +201,6 @@ F06.5 final-result confidentiality: ADMIN alone receives leaderboard and ranks; 
 
 
 F06.6 uses after-commit lifecycle and administrator-only invalidations. Reconcile via REST as described in [QUIZ_REALTIME_SYNCHRONIZATION.md](QUIZ_REALTIME_SYNCHRONIZATION.md). Quiz frontends remain pending.
+
+
+A07 `/admin/quiz` reuses the shared administrator layout and ADMIN route guard. In DRAFT it supports quiz title, questions, ordering and readiness. Live mode uses server deadlines, versioned lifecycle actions, administrator answer counts and debounced STOMP/REST reconciliation. View Results is disabled until A08 is implemented. The single event quiz and participant-only personal results remain unchanged. Run `cd frontend && npm run lint && npm run typecheck && npm run test:shared && node --test tests/admin-quiz.test.mjs && npm run build`; verify live behavior with an authenticated administrator and disposable backend data.

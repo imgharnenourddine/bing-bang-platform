@@ -378,3 +378,6 @@ Quiz results: `GET /api/admin/quiz/leaderboard` is administrator-only; `GET /api
 
 
 F06.6 adds committed Quiz lifecycle and administrator-only invalidation events. See [Quiz real-time synchronization](docs/QUIZ_REALTIME_SYNCHRONIZATION.md). Quiz interfaces and live integration validation remain pending.
+
+
+A07 is available at `/admin/quiz` for administrators. Configure the single quiz, maintain draft questions, check readiness and control the server-timed lifecycle. It uses shared STOMP invalidations and REST reconciliation; A08 results navigation remains unavailable. See [Quiz integration](docs/QUIZ_INTEGRATION.md). Live backend and browser integration still need verification.

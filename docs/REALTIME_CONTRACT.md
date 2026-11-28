@@ -96,3 +96,6 @@ F06.6 publishes ADMIN-only answer-count invalidations after commit; individual a
 
 
 F06.5 results privacy: future shared participant quiz events must never carry leaderboard, ranks, scores, winner identities or distributions. Results are fetched via role-protected REST. See QUIZ_REALTIME_SYNCHRONIZATION.md for F06.6.
+
+
+A07 subscribes to `/topic/quiz` and `/topic/admin` using the existing shared client, debounces invalidations, rejects stale revisions and refreshes REST after reconnect; visible pages also reconcile every 30 seconds.
