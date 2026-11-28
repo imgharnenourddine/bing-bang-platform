@@ -28,6 +28,8 @@ public class QuizSession {
         if (text == null || text.isBlank() || text.strip().length() > max) throw new IllegalArgumentException("Invalid text");
         return text.strip();
     }
+    void rename(String value, Instant now) { title = requireText(value, 200); updatedAt = now; }
+    void touch(Instant now) { updatedAt = now.isAfter(updatedAt) ? now : updatedAt.plusNanos(1); }
     public UUID getId() { return id; }
     public String getTitle() { return title; }
     public QuizStatus getStatus() { return status; }
