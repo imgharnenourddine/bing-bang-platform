@@ -122,7 +122,7 @@ Question deadlines, draft-only editing, competition ranks, administrator-only le
 
 `/ws` uses native STOMP and the HTTP session. Obtain `/api/auth/csrf` after authentication, send the returned header name/token in CONNECT, and subscribe to `/topic/quiz`. `/topic/admin` is ADMIN-only; `/user/queue/notifications` is private to the authenticated namespaced principal. Clients cannot SEND to broker or unapproved app destinations. See [REALTIME_CONTRACT.md](REALTIME_CONTRACT.md) for authorization, origin, heartbeat, transaction and single-instance limitations.
 
-Existing event envelope: `{eventId,type,timestamp,version,payload}`. Available types are `QUIZ_OPENED`, `QUESTION_OPENED`, `QUESTION_CLOSED`, `LEADERBOARD_UPDATED`, `QUIZ_FINISHED`. The **currently implemented** quiz payload is only `RealtimePayload.QuizState(String status)`, not a question DTO. For example, after persisting a future quiz state:
+Existing event envelope: `{eventId,type,timestamp,version,payload}`. Available types are `QUIZ_OPENED`, `QUESTION_OPENED`, `QUESTION_CLOSED`, `LEADERBOARD_UPDATED`, `QUIZ_FINISHED`. The original `RealtimePayload.QuizState(String status)` remains available; F06.6 adds typed invalidations documented in QUIZ_REALTIME_SYNCHRONIZATION.md. For example, the legacy publisher can be used after persisting state:
 
 ```java
 @Transactional
@@ -191,10 +191,13 @@ See [API_CONTRACT.md](API_CONTRACT.md) for the implemented ADMIN-only quiz and q
 
 ## F06.3 lifecycle
 
-ADMIN lifecycle routes and the PARTICIPANT-only `/api/quiz/status` are implemented; see [QUIZ_LIFECYCLE.md](QUIZ_LIFECYCLE.md). The participant DTO exposes no correct-answer flags. Answer admission and fixed scoring are implemented in F06.4; Quiz event publication remains a future milestone. V8 stores closing cutoffs and per-question timings; migration and concurrency behavior remain unverified until tested against PostgreSQL.
+ADMIN lifecycle routes and the PARTICIPANT-only `/api/quiz/status` are implemented; see [QUIZ_LIFECYCLE.md](QUIZ_LIFECYCLE.md). The participant DTO exposes no correct-answer flags. Answer admission and fixed scoring are implemented in F06.4; Quiz lifecycle and administrator invalidation events are implemented in F06.6. V8 stores closing cutoffs and per-question timings; migration and concurrency behavior remain unverified until tested against PostgreSQL.
 
 
-F06.4 implements authenticated participant answers, recovery and closed-question feedback, and ADMIN answer counts; see [QUIZ_ANSWER_AND_SCORING.md](QUIZ_ANSWER_AND_SCORING.md). F06.5 adds the administrator leaderboard and personal results; complete Quiz events remain future work.
+F06.4 implements authenticated participant answers, recovery and closed-question feedback, and ADMIN answer counts; see [QUIZ_ANSWER_AND_SCORING.md](QUIZ_ANSWER_AND_SCORING.md). F06.5 adds the administrator leaderboard and personal results; F06.6 implements lifecycle and admin invalidation events; live validation remains pending.
 
 
 F06.5 final-result confidentiality: ADMIN alone receives leaderboard and ranks; PARTICIPANT receives only an unranked personal result. See [QUIZ_RESULTS_AND_LEADERBOARD.md](QUIZ_RESULTS_AND_LEADERBOARD.md). A07, A08, P05 and P06 remain pending.
+
+
+F06.6 uses after-commit lifecycle and administrator-only invalidations. Reconcile via REST as described in [QUIZ_REALTIME_SYNCHRONIZATION.md](QUIZ_REALTIME_SYNCHRONIZATION.md). Quiz frontends remain pending.

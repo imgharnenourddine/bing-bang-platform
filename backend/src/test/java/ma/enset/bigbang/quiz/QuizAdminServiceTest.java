@@ -53,4 +53,11 @@ class QuizAdminServiceTest {
         when(questions.findByQuizSessionIdOrderByPositionAsc(quiz.getId())).thenReturn(List.of());
         assertFalse(service.readiness().ready());
     }
+    @Test void validConfigurationUpdateEmitsAdminInvalidation(){
+        var events=mock(ma.enset.bigbang.notification.RealtimeEvents.class);service.setRealtime(events);
+        service.update(new QuizAdminDtos.UpdateQuiz("Updated",0L));
+        verify(events).quizAdmin(eq(ma.enset.bigbang.notification.EventType.QUIZ_CONFIGURATION_UPDATED),any());
+        assertThrows(QuizAdminException.class,()->service.update(new QuizAdminDtos.UpdateQuiz("Other",1L)));
+        verifyNoMoreInteractions(events);
+    }
 }

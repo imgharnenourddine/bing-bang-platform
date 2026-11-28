@@ -368,10 +368,13 @@ Administrators can create one DRAFT event quiz, edit its title and manage ordere
 
 ### Quiz lifecycle (F06.3)
 
-The ADMIN Quiz lifecycle opens and closes ordered questions using persisted server deadlines and a shared expiry scheduler; `/api/quiz/status` returns participant-safe current state. V8 retains per-question timing. See [Quiz lifecycle](docs/QUIZ_LIFECYCLE.md) for endpoints, locking and restart behavior. Answers, scoring, results and Quiz event publication remain future work. PostgreSQL migration and runtime integration are not yet verified.
+The ADMIN Quiz lifecycle opens and closes ordered questions using persisted server deadlines and a shared expiry scheduler; `/api/quiz/status` returns participant-safe current state. V8 retains per-question timing. See [Quiz lifecycle](docs/QUIZ_LIFECYCLE.md) for endpoints, locking and restart behavior. Answers, scoring, results and Quiz lifecycle notifications are implemented in F06.4–F06.6. PostgreSQL migration and runtime integration are not yet verified.
 
 
-F06.4 adds participant answer submission, idempotent recovery, closed-question feedback and fixed scoring, plus administrator answer counts. See [Quiz answer and scoring](docs/QUIZ_ANSWER_AND_SCORING.md) for endpoints, roles, concurrency and verification limitations. F06.5 adds the administrator-only leaderboard and personal results; complete Quiz real-time synchronization remains pending.
+F06.4 adds participant answer submission, idempotent recovery, closed-question feedback and fixed scoring, plus administrator answer counts. See [Quiz answer and scoring](docs/QUIZ_ANSWER_AND_SCORING.md) for endpoints, roles, concurrency and verification limitations. F06.5 adds the administrator-only leaderboard and personal results; F06.6 implements Quiz lifecycle and admin invalidation events; live validation remains pending.
 
 
 Quiz results: `GET /api/admin/quiz/leaderboard` is administrator-only; `GET /api/quiz/me/results` returns only the participant’s unranked personal result. See [Quiz results](docs/QUIZ_RESULTS_AND_LEADERBOARD.md) for eligibility and verification limits. A07/A08 and P05/P06 remain future interfaces.
+
+
+F06.6 adds committed Quiz lifecycle and administrator-only invalidation events. See [Quiz real-time synchronization](docs/QUIZ_REALTIME_SYNCHRONIZATION.md). Quiz interfaces and live integration validation remain pending.

@@ -19,6 +19,8 @@ import org.springframework.transaction.annotation.Isolation;
 public class QuizAnswerService {
  private final QuizSessionRepository sessions;private final QuizOptionRepository options;private final QuizAnswerRepository answers;private final QuizQuestionRepository questions;private final ParticipantRepository participants;private final JdbcTemplate jdbc;private final EntityManager em;private final Clock clock;
  public QuizAnswerService(QuizSessionRepository sessions,QuizOptionRepository options,QuizAnswerRepository answers,QuizQuestionRepository questions,ParticipantRepository participants,JdbcTemplate jdbc,EntityManager em,Clock clock){this.sessions=sessions;this.options=options;this.answers=answers;this.questions=questions;this.participants=participants;this.jdbc=jdbc;this.em=em;this.clock=clock;}
+ private ma.enset.bigbang.notification.RealtimeEvents realtime;
+ @org.springframework.beans.factory.annotation.Autowired(required=false) void setRealtime(ma.enset.bigbang.notification.RealtimeEvents realtime){this.realtime=realtime;}
  public record Submission(QuizAnswerDtos.Acknowledgment answer,boolean created) { }
  private QuizAdminException error(HttpStatus status,String code,String message){return new QuizAdminException(status,code,message);}
  private QuizSession session(){var all=sessions.findAll();if(all.isEmpty())throw error(HttpStatus.NOT_FOUND,"QUIZ_NOT_FOUND","Quiz not found.");if(all.size()!=1)throw error(HttpStatus.CONFLICT,"AMBIGUOUS_QUIZ","Quiz state unavailable.");return all.getFirst();}
@@ -37,7 +39,10 @@ public class QuizAnswerService {
   if(!participants.existsById(participant))throw error(HttpStatus.UNAUTHORIZED,"AUTHENTICATION_REQUIRED","Participant authentication required.");
   int points=option.isCorrect()?q.getCurrentQuestion().getPoints():0;
   var inserted=jdbc.query("INSERT INTO quiz_answers(id,question_id,participant_id,selected_option_id,submitted_at,awarded_points) VALUES (?,?,?,?,?,?) ON CONFLICT (question_id,participant_id) DO NOTHING RETURNING submitted_at",(rs,i)->rs.getTimestamp(1).toInstant(),UUID.randomUUID(),input.questionId(),participant,input.optionId(),Timestamp.from(acceptedAt.truncatedTo(ChronoUnit.MICROS)),points);
-  if(!inserted.isEmpty())return new Submission(ack(input.questionId(),input.optionId(),inserted.getFirst()),true);
+  if(!inserted.isEmpty()){
+   if(realtime!=null)realtime.quizAdmin(ma.enset.bigbang.notification.EventType.QUIZ_ANSWER_COUNT_UPDATED,new ma.enset.bigbang.notification.RealtimePayload.QuizInvalidation(q.getId(),input.questionId(),q.getVersion()));
+   return new Submission(ack(input.questionId(),input.optionId(),inserted.getFirst()),true);
+  }
   prior=existing(q.getId(),input.questionId(),participant);if(prior.isEmpty())throw error(HttpStatus.CONFLICT,"ANSWER_CONFLICT","Answer state changed; reload and try again.");return recover(prior.getFirst(),input.optionId());
  }
  @Transactional(readOnly=true) public QuizAnswerDtos.Acknowledgment answer(UUID participant,UUID question){var q=session();return existing(q.getId(),question,participant).stream().findFirst().orElseThrow(()->error(HttpStatus.NOT_FOUND,"ANSWER_NOT_FOUND","No accepted answer found."));}

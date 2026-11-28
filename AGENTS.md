@@ -49,3 +49,6 @@ F06.4 implements participant answer submission and fixed scoring. Preserve share
 
 
 F06.5 results are available only after quiz completion. The leaderboard and ranks are ADMIN-only; participants may retrieve only their own unranked result. Preserve eligibility and fixed-score semantics in docs/QUIZ_RESULTS_AND_LEADERBOARD.md.
+
+
+F06.6 uses after-commit Quiz lifecycle events and administrator-only invalidations. REST remains authoritative; the broker is single-instance. See docs/QUIZ_REALTIME_SYNCHRONIZATION.md.

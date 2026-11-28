@@ -25,7 +25,7 @@ sequenceDiagram
 
 The transaction refreshes the quiz under a pessimistic read lock, then reads server `Clock` time; new submissions require time strictly before the stored deadline. Lifecycle mutations take the conflicting exclusive lock, so a manual or scheduled close cannot pass an admitted transaction. The unique constraint and `INSERT ... ON CONFLICT DO NOTHING` resolve simultaneous duplicates without continuing in an aborted transaction. The server stores configured question points for a correct answer and zero for an incorrect answer. No answer row contributes zero. Stored awards are historical snapshots. Database locking and simultaneous request behavior still require verification against PostgreSQL in the target environment.
 
-No per-answer WebSocket event is published in this milestone. Future F06.6 events must be after commit and must not broadcast answers or early correctness. The administrator leaderboard and participant personal results are implemented in F06.5. Unit, PostgreSQL and HTTP/security test sources are provided; execution depends on the local Maven and PostgreSQL environment.
+F06.6 publishes administrator-only answer-count invalidations after commit, without broadcasting answers or early correctness. The administrator leaderboard and participant personal results are implemented in F06.5. Unit, PostgreSQL and HTTP/security test sources are provided; execution depends on the local Maven and PostgreSQL environment.
 
 ## Local verification
 
@@ -33,3 +33,6 @@ Run `cd backend && ./mvnw clean verify`. `PostgresQuizAnswerTest` is enabled onl
 
 
 F06.5 aggregates immutable awards for administrator rankings and unranked personal results; see [QUIZ_RESULTS_AND_LEADERBOARD.md](QUIZ_RESULTS_AND_LEADERBOARD.md).
+
+
+F06.6 emits an administrator-only invalidation after each newly committed answer; idempotent recovery emits none. See [QUIZ_REALTIME_SYNCHRONIZATION.md](QUIZ_REALTIME_SYNCHRONIZATION.md).

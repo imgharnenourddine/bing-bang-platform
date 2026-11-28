@@ -66,4 +66,19 @@ class RealtimeTransactionTest {
                     value instanceof EventEnvelope<?> envelope && envelope.type() == EventType.DRAW_RESET));
         }
     }
+    @Test void quizEventsDeliverAfterCommitOnlyToCorrectDestinations() {
+        try (var context = new AnnotationConfigApplicationContext(TestConfig.class)) {
+            var tx = new TransactionTemplate(context.getBean(PlatformTransactionManager.class));
+            var events = context.getBean(RealtimeEvents.class);var messaging = context.getBean(SimpMessagingTemplate.class);
+            var id=UUID.randomUUID();var payload=new RealtimePayload.QuizLifecycle(id,"OPEN",null,null,1,null,null,null,null,null,1);
+            tx.executeWithoutResult(status -> {events.quizLifecycle(EventType.QUIZ_OPENED,payload);status.setRollbackOnly();});
+            verifyNoInteractions(messaging);
+            tx.executeWithoutResult(status -> {events.quizLifecycle(EventType.QUIZ_OPENED,payload);events.quizAdmin(EventType.QUIZ_ANSWER_COUNT_UPDATED,new RealtimePayload.QuizInvalidation(id,UUID.randomUUID(),1));verifyNoInteractions(messaging);});
+            verify(messaging).convertAndSend(eq("/topic/quiz"),any(EventEnvelope.class));verify(messaging).convertAndSend(eq("/topic/admin"),any(EventEnvelope.class));
+        }
+    }
+    @Test void quizPayloadsExcludeAnswersAndRanks() {
+        var fields=java.util.Arrays.stream(RealtimePayload.QuizLifecycle.class.getRecordComponents()).map(java.lang.reflect.RecordComponent::getName).toList();
+        org.junit.jupiter.api.Assertions.assertFalse(fields.contains("correctOptionId"));org.junit.jupiter.api.Assertions.assertFalse(fields.contains("score"));org.junit.jupiter.api.Assertions.assertFalse(fields.contains("rank"));org.junit.jupiter.api.Assertions.assertFalse(fields.contains("answer"));
+    }
 }

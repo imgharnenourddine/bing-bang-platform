@@ -113,7 +113,7 @@ All endpoints below require an ADMIN session; POST, PUT, PATCH and DELETE requir
 
 Question POST and PUT accept `{ "text": "Question?", "durationSeconds": 30, "points": 100, "options": [{"text":"Yes","correct":true},{"text":"No","correct":false}], "expectedVersion": 0 }`. The duration and points default to 30 and 100 if omitted. Question responses include ID, text, position, durationSeconds, points, ordered options with ID/text/position/correct, timestamps and `quizVersion`. Get a fresh version from GET before each mutation; every successful mutation updates the aggregate version. A stale version gives 409 `STALE_QUIZ_VERSION`. Quiz and question text are limited to 200 and 2000 characters, option text to 1000; 2–10 options are required, exactly one correct and no duplicate after trimming and case folding. Positions are server-assigned; reorder requires the complete set, and deletion compacts positions.
 
-Invalid requests return 400, unauthenticated access 401, forbidden role or CSRF 403, missing resources 404, and duplicate quiz, non-DRAFT mutation, stale versions or integrity conflicts 409. Domain problem details include a stable `code` where provided. Concurrent quiz creation takes a PostgreSQL transaction advisory lock; other mutations lock the session row before updating questions. Lifecycle execution and safe current-question retrieval are implemented in F06.3; answer submission and fixed scoring are implemented in F06.4; administrator leaderboard and personal results are implemented in F06.5; Quiz events remain unimplemented.
+Invalid requests return 400, unauthenticated access 401, forbidden role or CSRF 403, missing resources 404, and duplicate quiz, non-DRAFT mutation, stale versions or integrity conflicts 409. Domain problem details include a stable `code` where provided. Concurrent quiz creation takes a PostgreSQL transaction advisory lock; other mutations lock the session row before updating questions. Lifecycle execution and safe current-question retrieval are implemented in F06.3; answer submission and fixed scoring are implemented in F06.4; administrator leaderboard and personal results are implemented in F06.5; Quiz lifecycle and administrator invalidation events are implemented in F06.6.
 
 ### Quiz lifecycle (F06.3)
 
@@ -121,3 +121,6 @@ ADMIN POST `/api/admin/quiz/start` and `/questions/open` accept `expectedVersion
 
 
 F06.5: `GET /api/admin/quiz/leaderboard` requires ADMIN; `GET /api/quiz/me/results` requires PARTICIPANT and exposes only its authenticated principal’s result. Both return 409 `QUIZ_RESULTS_NOT_AVAILABLE` before completion. Details and examples: [QUIZ_RESULTS_AND_LEADERBOARD.md](QUIZ_RESULTS_AND_LEADERBOARD.md).
+
+
+Participant `GET /api/quiz/status` includes `quizId` and persisted `lifecycleVersion` for REST/STOMP reconciliation. See [QUIZ_REALTIME_SYNCHRONIZATION.md](QUIZ_REALTIME_SYNCHRONIZATION.md).

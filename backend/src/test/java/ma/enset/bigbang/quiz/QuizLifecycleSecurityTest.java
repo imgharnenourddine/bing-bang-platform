@@ -22,7 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class QuizLifecycleSecurityTest {
  @Autowired MockMvc mvc;@MockBean QuizLifecycleService service;@MockBean AdministratorRepository administrators;
  @Test void participantCanReadSafeStateButCannotMutate() throws Exception {
-  when(service.participant(any())).thenReturn(new QuizLifecycleDtos.ParticipantState("Quiz",QuizStatus.QUESTION_ACTIVE,null,1,1,"Question",List.of(new QuizLifecycleDtos.PublicOption(java.util.UUID.randomUUID(),"Option",1)),Instant.now(),Instant.now(),Instant.now(),false,null,true));
+  when(service.participant(any())).thenReturn(new QuizLifecycleDtos.ParticipantState("Quiz",QuizStatus.QUESTION_ACTIVE,null,1,1,"Question",List.of(new QuizLifecycleDtos.PublicOption(java.util.UUID.randomUUID(),"Option",1)),Instant.now(),Instant.now(),Instant.now(),false,null,true,java.util.UUID.randomUUID(),1L));
   mvc.perform(get("/api/quiz/status")).andExpect(status().isUnauthorized());
   mvc.perform(get("/api/quiz/status").with(user(new ma.enset.bigbang.auth.SessionPrincipal(java.util.UUID.randomUUID(),"p",ma.enset.bigbang.auth.Role.PARTICIPANT,true,null)))).andExpect(status().isOk()).andExpect(jsonPath("$.options[0].correct").doesNotExist());
   mvc.perform(post("/api/admin/quiz/start").with(user(new ma.enset.bigbang.auth.SessionPrincipal(java.util.UUID.randomUUID(),"p",ma.enset.bigbang.auth.Role.PARTICIPANT,true,null))).with(csrf()).contentType(MediaType.APPLICATION_JSON).content("{\"expectedVersion\":0}")).andExpect(status().isForbidden());

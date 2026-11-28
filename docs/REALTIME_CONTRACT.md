@@ -1,6 +1,6 @@
 # Real-time contract
 
-F03 provides backend infrastructure and F04 adds the draw business flow. Wheel and quiz event names below remain reserved contracts. PostgreSQL remains authoritative; business commands use REST. WebSocket delivery is best-effort and has no replay or guaranteed ordering. An event may be lost after a successful database commit. No notification history or outbox is implemented.
+F03 provides backend infrastructure and F04 adds the draw business flow. Wheel and quiz lifecycle events are integrated. PostgreSQL remains authoritative; business commands use REST. WebSocket delivery is best-effort and has no replay or guaranteed ordering. An event may be lost after a successful database commit. No notification history or outbox is implemented.
 
 ## Connect and authenticate
 
@@ -81,7 +81,7 @@ After successful allocation, `/topic/wheel` receives `WHEEL_STARTED`, `WHEEL_RES
 
 ## Quiz handoff
 
-`/topic/quiz` and the five existing `QUIZ_OPENED`, `QUESTION_OPENED`, `QUESTION_CLOSED`, `LEADERBOARD_UPDATED`, `QUIZ_FINISHED` event types are available, but the only currently implemented Quiz payload is `RealtimePayload.QuizState(String status)`. Question and leaderboard DTOs and business publication do not yet exist. The Tech Lead owns additions and versioned contracts; do not publish correct answers before closure or another participant's private answer. `frontend/src/services/realtime.ts` provides a shared authenticated STOMP connection; clients should use `onConnected` to retrieve authoritative state over REST after reconnect. See [QUIZ_INTEGRATION.md](QUIZ_INTEGRATION.md).
+`/topic/quiz` and the five existing `QUIZ_OPENED`, `QUESTION_OPENED`, `QUESTION_CLOSED`, `LEADERBOARD_UPDATED`, `QUIZ_FINISHED` event types are available, and the original `RealtimePayload.QuizState(String status)` remains available for compatibility. F06.6 publishes compact lifecycle and administrator invalidation DTOs after commit; no leaderboard is broadcast. The Tech Lead owns additions and versioned contracts; do not publish correct answers before closure or another participant's private answer. `frontend/src/services/realtime.ts` provides a shared authenticated STOMP connection; clients should use `onConnected` to retrieve authoritative state over REST after reconnect. See [QUIZ_INTEGRATION.md](QUIZ_INTEGRATION.md).
 
 ## Participant home integration
 
@@ -89,10 +89,10 @@ P02 uses the existing shared STOMP service for `/user/queue/notifications` and `
 
 ## F06.3 lifecycle boundary
 
-Lifecycle state and deadlines are available over REST as documented in [QUIZ_LIFECYCLE.md](QUIZ_LIFECYCLE.md). F06.3 does not publish Quiz lifecycle events; future F06.6 integration must publish only after commit and omit correct answers and private submissions.
+Lifecycle state and deadlines are available over REST as documented in [QUIZ_LIFECYCLE.md](QUIZ_LIFECYCLE.md). F06.6 publishes Quiz lifecycle events after commit without correct answers or private submissions.
 
 
-F06.4 does not publish answer events. Future answer-count notifications must be ADMIN-only and after commit; individual answers and early correctness must not be broadcast. REST remains authoritative.
+F06.6 publishes ADMIN-only answer-count invalidations after commit; individual answers and early correctness are not broadcast. REST remains authoritative.
 
 
-F06.5 results privacy: future shared participant quiz events must never carry leaderboard, ranks, scores, winner identities or distributions. Results are fetched via role-protected REST. F06.6 remains pending.
+F06.5 results privacy: future shared participant quiz events must never carry leaderboard, ranks, scores, winner identities or distributions. Results are fetched via role-protected REST. See QUIZ_REALTIME_SYNCHRONIZATION.md for F06.6.
