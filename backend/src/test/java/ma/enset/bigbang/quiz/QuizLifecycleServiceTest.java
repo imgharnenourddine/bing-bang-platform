@@ -1,0 +1,30 @@
+package ma.enset.bigbang.quiz;
+
+import jakarta.persistence.EntityManager;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import org.junit.jupiter.api.Test;
+import org.springframework.jdbc.core.JdbcTemplate;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+class QuizLifecycleServiceTest {
+ private final Instant now=Instant.parse("2026-11-28T13:00:00Z");
+ private final QuizSessionRepository sessions=mock(QuizSessionRepository.class);private final QuizQuestionRepository questions=mock(QuizQuestionRepository.class);private final QuizOptionRepository options=mock(QuizOptionRepository.class);private final QuizAdminService preparation=mock(QuizAdminService.class);private final JdbcTemplate jdbc=mock(JdbcTemplate.class);private final EntityManager em=mock(EntityManager.class);
+ private final QuizSession quiz=new QuizSession(UUID.randomUUID(),"Quiz",now.minusSeconds(20));
+ private QuizLifecycleService service(Instant time){return new QuizLifecycleService(sessions,questions,options,preparation,jdbc,Clock.fixed(time,ZoneOffset.UTC),em);}
+ private void setup(){when(sessions.findAll()).thenReturn(List.of(quiz));when(sessions.findByIdForUpdate(quiz.getId())).thenReturn(Optional.of(quiz));when(preparation.readiness()).thenReturn(new QuizAdminDtos.Readiness(true,1,List.of()));}
+ @Test void startAndOpenGenerateDeadlineAndPreventDuplicateStart(){setup();var q=new QuizQuestion(UUID.randomUUID(),quiz,"Question",1,30,100,now);when(questions.findFirstByQuizSessionIdAndPositionGreaterThanOrderByPositionAsc(quiz.getId(),0)).thenReturn(Optional.of(q));service(now).start(0);assertEquals(QuizStatus.OPEN,quiz.getStatus());service(now).openFirst(0);assertEquals(now.plusSeconds(30),quiz.getQuestionDeadline());assertEquals(QuizStatus.QUESTION_ACTIVE,quiz.getStatus());assertThrows(QuizAdminException.class,()->service(now).start(0));}
+ @Test void automaticCloseRespectsExactDeadlineAndStaleIdentity(){setup();var q=new QuizQuestion(UUID.randomUUID(),quiz,"Q",1,30,100,now);quiz.start(now.minusSeconds(1));quiz.openQuestion(q,now);service(now.plusSeconds(30).minusNanos(1)).closeExpired(quiz.getId(),q.getId());assertEquals(QuizStatus.QUESTION_ACTIVE,quiz.getStatus());service(now.plusSeconds(30)).closeExpired(quiz.getId(),UUID.randomUUID());assertEquals(QuizStatus.QUESTION_ACTIVE,quiz.getStatus());service(now.plusSeconds(30)).closeExpired(quiz.getId(),q.getId());assertEquals(QuizStatus.QUESTION_CLOSED,quiz.getStatus());assertEquals(now.plusSeconds(30),quiz.getQuestionClosedAt());}
+ @Test void manualCloseUsesDeadlineWhenLateAndRejectsOldQuestion(){setup();var q=new QuizQuestion(UUID.randomUUID(),quiz,"Q",1,30,100,now);quiz.start(now);quiz.openQuestion(q,now);assertThrows(QuizAdminException.class,()->service(now).closeCurrent(UUID.randomUUID(),0));service(now.plusSeconds(31)).closeCurrent(q.getId(),0);assertEquals(now.plusSeconds(30),quiz.getQuestionClosedAt());assertThrows(QuizAdminException.class,()->service(now.plusSeconds(32)).closeCurrent(q.getId(),0));}
+ @Test void cannotFinishWithQuestionsRemainingOrUseStaleVersion(){setup();var q=new QuizQuestion(UUID.randomUUID(),quiz,"Q",1,30,100,now);var later=new QuizQuestion(UUID.randomUUID(),quiz,"Q2",2,30,100,now);quiz.start(now);quiz.openQuestion(q,now);quiz.closeQuestion(now.plusSeconds(1));when(questions.findFirstByQuizSessionIdAndPositionGreaterThanOrderByPositionAsc(quiz.getId(),1)).thenReturn(Optional.of(later));assertThrows(QuizAdminException.class,()->service(now.plusSeconds(2)).finish(q.getId(),0));assertThrows(QuizAdminException.class,()->service(now).openNext(q.getId(),99));}
+ @Test void participantResponseNeverContainsCorrectnessOrFutureQuestion(){setup();var q=new QuizQuestion(UUID.randomUUID(),quiz,"Q",1,30,100,now);var option=new QuizOption(UUID.randomUUID(),q,"Yes",1,true);quiz.start(now);quiz.openQuestion(q,now);when(options.findByQuestionIdOrderByPositionAsc(q.getId())).thenReturn(List.of(option));var response=service(now).participant();assertEquals("Yes",response.options().getFirst().text());assertEquals(3,QuizLifecycleDtos.PublicOption.class.getRecordComponents().length);quiz.closeQuestion(now.plusSeconds(1));assertNull(service(now).participant().questionText());assertTrue(service(now).participant().options().isEmpty());}
+ @Test void nextAndFinishDoNotReopenPriorQuestion(){setup();var first=new QuizQuestion(UUID.randomUUID(),quiz,"Q1",1,30,100,now);var second=new QuizQuestion(UUID.randomUUID(),quiz,"Q2",2,45,100,now);quiz.start(now);quiz.openQuestion(first,now);quiz.closeQuestion(now.plusSeconds(1));when(questions.findFirstByQuizSessionIdAndPositionGreaterThanOrderByPositionAsc(quiz.getId(),1)).thenReturn(Optional.of(second));service(now.plusSeconds(2)).openNext(first.getId(),0);assertEquals(second.getId(),quiz.getCurrentQuestion().getId());assertEquals(now.plusSeconds(47),quiz.getQuestionDeadline());quiz.closeQuestion(now.plusSeconds(3));when(questions.findFirstByQuizSessionIdAndPositionGreaterThanOrderByPositionAsc(quiz.getId(),2)).thenReturn(Optional.empty());service(now.plusSeconds(4)).finish(second.getId(),0);assertEquals(QuizStatus.FINISHED,quiz.getStatus());assertThrows(QuizAdminException.class,()->service(now.plusSeconds(5)).openNext(second.getId(),0));}
+ @Test void expiredRecoveryAfterDeadlineKeepsOriginalCutoff(){setup();var q=new QuizQuestion(UUID.randomUUID(),quiz,"Q",1,30,100,now);quiz.start(now);quiz.openQuestion(q,now);service(now.plusSeconds(31)).closeExpired(quiz.getId(),q.getId());assertEquals(now.plusSeconds(30),quiz.getQuestionClosedAt());service(now.plusSeconds(32)).closeExpired(quiz.getId(),q.getId());assertEquals(QuizStatus.QUESTION_CLOSED,quiz.getStatus());}
+ @Test void unreadyQuizCannotStart(){setup();when(preparation.readiness()).thenReturn(new QuizAdminDtos.Readiness(false,0,List.of("No questions")));assertEquals("QUIZ_NOT_READY",assertThrows(QuizAdminException.class,()->service(now).start(0)).code());}
+}

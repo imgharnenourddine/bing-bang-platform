@@ -19,6 +19,7 @@ public class QuizAdminService {
     private QuizAdminException error(HttpStatus s,String code,String msg){return new QuizAdminException(s,code,msg);}
     private QuizSession onlySession(){var all=sessions.findAll();if(all.isEmpty())throw error(HttpStatus.NOT_FOUND,"QUIZ_NOT_FOUND","Quiz has not been created.");if(all.size()!=1)throw error(HttpStatus.CONFLICT,"AMBIGUOUS_QUIZ","Multiple quiz sessions require administrative reconciliation.");return all.get(0);}
     private QuizSession locked(Long version){var q=sessions.findByIdForUpdate(onlySession().getId()).orElseThrow(()->error(HttpStatus.NOT_FOUND,"QUIZ_NOT_FOUND","Quiz not found."));
+        em.refresh(q,jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
         if(q.getStatus()!=QuizStatus.DRAFT)throw error(HttpStatus.CONFLICT,"QUIZ_NOT_DRAFT","Quiz preparation is closed.");
         if(version==null||q.getVersion()!=version)throw error(HttpStatus.CONFLICT,"STALE_QUIZ_VERSION","Quiz was changed; reload before editing.");return q;}
     private void touch(QuizSession q){q.touch(Instant.now());sessions.saveAndFlush(q);}
