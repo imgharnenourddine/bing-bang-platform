@@ -90,3 +90,6 @@ P02 uses the existing shared STOMP service for `/user/queue/notifications` and `
 ## F06.3 lifecycle boundary
 
 Lifecycle state and deadlines are available over REST as documented in [QUIZ_LIFECYCLE.md](QUIZ_LIFECYCLE.md). F06.3 does not publish Quiz lifecycle events; future F06.6 integration must publish only after commit and omit correct answers and private submissions.
+
+
+F06.4 does not publish answer events. Future answer-count notifications must be ADMIN-only and after commit; individual answers and early correctness must not be broadcast. REST remains authoritative.

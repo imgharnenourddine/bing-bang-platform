@@ -7,7 +7,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-@RestControllerAdvice(assignableTypes = {QuizAdminController.class, QuizLifecycleController.class})
+@RestControllerAdvice(assignableTypes = {QuizAdminController.class, QuizLifecycleController.class, QuizAnswerController.class})
 public class QuizAdminErrorHandler {
     @ExceptionHandler(QuizAdminException.class) ProblemDetail domain(QuizAdminException e) { var p=ProblemDetail.forStatusAndDetail(e.status(),e.getMessage());p.setProperty("code",e.code());return p; }
     @ExceptionHandler({DataIntegrityViolationException.class,CannotAcquireLockException.class,org.springframework.orm.ObjectOptimisticLockingFailureException.class})
